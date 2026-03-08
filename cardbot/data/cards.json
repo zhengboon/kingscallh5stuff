@@ -1,0 +1,36 @@
+{
+  "cards": [
+    {
+      "id": "squire",
+      "name": "Squire",
+      "atk": 2,
+      "hp": 6,
+      "countdown": 1,
+      "abilities": ["regen_2"]
+    },
+    {
+      "id": "brute",
+      "name": "Brute",
+      "atk": 4,
+      "hp": 8,
+      "countdown": 2,
+      "abilities": ["fortify_2"]
+    },
+    {
+      "id": "berserker",
+      "name": "Berserker",
+      "atk": 3,
+      "hp": 5,
+      "countdown": 1,
+      "abilities": ["rage_hit_2"]
+    },
+    {
+      "id": "guardian",
+      "name": "Guardian",
+      "atk": 1,
+      "hp": 10,
+      "countdown": 2,
+      "abilities": ["fortify_2", "regen_2"]
+    }
+  ]
+}

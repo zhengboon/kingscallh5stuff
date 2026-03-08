@@ -1,0 +1,32 @@
+{
+  "abilities": [
+    {
+      "id": "regen_2",
+      "name": "Regeneration",
+      "description": "Heal 2 HP at the start of your turn.",
+      "trigger": "on_turn_start",
+      "effect": "heal_self",
+      "value": 2,
+      "scope": "self"
+    },
+    {
+      "id": "fortify_2",
+      "name": "Fortify",
+      "description": "Gain +2 max HP when summoned.",
+      "trigger": "on_summon",
+      "effect": "increase_max_hp_self",
+      "value": 2,
+      "scope": "self",
+      "heal_for_delta": true
+    },
+    {
+      "id": "rage_hit_2",
+      "name": "Rage",
+      "description": "Gain +2 damage after each hit.",
+      "trigger": "on_hit",
+      "effect": "gain_damage_bonus_self",
+      "value": 2,
+      "scope": "self"
+    }
+  ]
+}
