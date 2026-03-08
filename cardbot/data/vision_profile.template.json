@@ -1,0 +1,11 @@
+{
+  "lane_coords": [
+    [120, 280, 340, 420],
+    [470, 280, 340, 420],
+    [820, 280, 340, 420]
+  ],
+  "turn_roi": [980, 40, 240, 120],
+  "turn_threshold": 0.82,
+  "card_match_threshold": 0.82,
+  "card_edge_ratio_threshold": 0.02
+}

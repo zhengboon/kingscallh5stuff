@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import argparse
 import time
+from typing import Any
 
 import cv2
 
@@ -11,11 +12,14 @@ from cardbot.agents.heuristic_agent import HeuristicAgent
 from cardbot.agents.random_agent import RandomAgent
 from cardbot.capture.screen_capture import ScreenCapture
 from cardbot.controller.input_controller import InputController
+from cardbot.controller.runtime_status import RuntimeStatusWriter
+from cardbot.controller.session_logger import SessionLogger
 from cardbot.engine.game_state import GameState
 from cardbot.vision.card_detector import CardDetector
 from cardbot.vision.debug_overlay import DebugOverlay
 from cardbot.vision.lane_detector import LaneDetector
 from cardbot.vision.ocr_reader import OCRReader
+from cardbot.vision.profile import apply_vision_profile, load_vision_profile, save_vision_profile
 from cardbot.vision.turn_detector import TurnDetector
 
 
@@ -61,10 +65,60 @@ def build_agent(agent_name: str):
     return HeuristicAgent()
 
 
+def summarize_state(state: GameState) -> dict:
+    """Create a compact state summary for session logs."""
+    lanes = []
+    for lane in state.lanes:
+        player_creature = lane.get_creature("player")
+        enemy_creature = lane.get_creature("enemy")
+        lanes.append(
+            {
+                "lane": lane.index,
+                "player": None if player_creature is None else player_creature.name,
+                "enemy": None if enemy_creature is None else enemy_creature.name,
+            }
+        )
+
+    return {
+        "turn": state.turn_number,
+        "winner": state.winner,
+        "player_hp": state.player_hp["player"],
+        "enemy_hp": state.player_hp["enemy"],
+        "player_hand_size": len(state.player_hand),
+        "enemy_hand_size": len(state.enemy_hand),
+        "lanes": lanes,
+    }
+
+
 def parse_args() -> argparse.Namespace:
     """Parse CLI options."""
     parser = argparse.ArgumentParser(description="Cardbot automation loop")
+    parser.add_argument("--instance-id", type=int, default=0, help="Logical bot instance ID")
+    parser.add_argument("--monitor-index", type=int, default=1, help="MSS monitor index (default: primary)")
+    parser.add_argument("--capture-left", type=int, default=None, help="Capture region left offset")
+    parser.add_argument("--capture-top", type=int, default=None, help="Capture region top offset")
+    parser.add_argument("--capture-width", type=int, default=None, help="Capture region width")
+    parser.add_argument("--capture-height", type=int, default=None, help="Capture region height")
+    parser.add_argument(
+        "--vision-profile",
+        type=str,
+        default=None,
+        help="Optional JSON profile path for lane/turn/card vision settings",
+    )
+    parser.add_argument(
+        "--save-vision-profile",
+        type=str,
+        default=None,
+        help="Save current auto/profile-adjusted vision settings to this JSON path",
+    )
     parser.add_argument("--lanes", type=int, default=3, choices=[2, 3, 4], help="Number of board lanes")
+    parser.add_argument(
+        "--mode",
+        type=str,
+        default="observe",
+        choices=["observe", "assist", "autoplay"],
+        help="observe=watch+log, assist=watch+suggest, autoplay=watch+act",
+    )
     parser.add_argument(
         "--agent",
         type=str,
@@ -73,6 +127,25 @@ def parse_args() -> argparse.Namespace:
         help="Action policy to use",
     )
     parser.add_argument("--target-fps", type=float, default=30.0, help="Target perception FPS")
+    parser.add_argument("--log-fps", type=float, default=5.0, help="Session log sampling FPS")
+    parser.add_argument(
+        "--session-dir",
+        type=str,
+        default="cardbot/data/sessions",
+        help="Directory for observation session logs",
+    )
+    parser.add_argument(
+        "--status-dir",
+        type=str,
+        default="cardbot/data/runtime_status",
+        help="Directory for runtime status heartbeat files",
+    )
+    parser.add_argument(
+        "--status-fps",
+        type=float,
+        default=2.0,
+        help="Heartbeat write frequency for UI status",
+    )
     parser.add_argument("--debug-window", action="store_true", help="Show OpenCV debug window")
     parser.add_argument(
         "--max-frames",
@@ -83,23 +156,98 @@ def parse_args() -> argparse.Namespace:
     return parser.parse_args()
 
 
+def build_capture_region(args: argparse.Namespace) -> dict[str, int] | None:
+    """Build capture region dict from CLI args or return None for full monitor."""
+    values: list[Any] = [
+        args.capture_left,
+        args.capture_top,
+        args.capture_width,
+        args.capture_height,
+    ]
+    if all(value is None for value in values):
+        return None
+    if any(value is None for value in values):
+        raise ValueError(
+            "Capture region requires all of --capture-left/--capture-top/"
+            "--capture-width/--capture-height"
+        )
+    return {
+        "left": int(args.capture_left),
+        "top": int(args.capture_top),
+        "width": int(args.capture_width),
+        "height": int(args.capture_height),
+    }
+
+
 def main() -> None:
     """Run the end-to-end automation loop."""
     args = parse_args()
 
-    capture = ScreenCapture()
+    capture_region = build_capture_region(args)
+    capture = ScreenCapture(monitor_index=args.monitor_index, region=capture_region)
     first_frame = capture.grab_frame()
 
     lane_detector = LaneDetector(lane_count=args.lanes)
-    lane_detector.auto_configure(first_frame.shape)
-
     card_detector = CardDetector()
     turn_detector = TurnDetector()
     ocr_reader = OCRReader()  # Placeholder, used when numeric ROI mapping is added.
     overlay = DebugOverlay(fps_window=30)
+    lane_detector.auto_configure(first_frame.shape)
+
+    profile_payload = load_vision_profile(args.vision_profile)
+    if args.vision_profile and not profile_payload:
+        print(f"[CARD-BOT:{args.instance_id}] no vision profile at {args.vision_profile}, using auto layout")
+    apply_vision_profile(
+        profile=profile_payload,
+        lane_detector=lane_detector,
+        turn_detector=turn_detector,
+        card_detector=card_detector,
+    )
+    if len(lane_detector.get_lane_boxes()) != args.lanes:
+        print(
+            f"[CARD-BOT:{args.instance_id}] profile lane count mismatch "
+            f"(expected={args.lanes}, got={len(lane_detector.get_lane_boxes())}), using auto layout"
+        )
+        lane_detector.auto_configure(first_frame.shape)
+
+    if args.save_vision_profile:
+        saved_path = save_vision_profile(
+            args.save_vision_profile,
+            {
+                "lane_coords": [list(box) for box in lane_detector.get_lane_boxes()],
+                "turn_roi": list(turn_detector.indicator_roi) if turn_detector.indicator_roi else None,
+                "turn_threshold": turn_detector.threshold,
+                "card_match_threshold": card_detector.match_threshold,
+                "card_edge_ratio_threshold": card_detector.edge_ratio_threshold,
+            },
+        )
+        print(f"[CARD-BOT:{args.instance_id}] saved vision profile -> {saved_path}")
 
     controller = InputController()
     agent = build_agent(args.agent)
+    logger = SessionLogger(
+        output_dir=args.session_dir,
+        mode=args.mode,
+        log_fps=args.log_fps,
+        metadata={
+            "instance_id": args.instance_id,
+            "monitor_index": args.monitor_index,
+            "capture_region": capture_region,
+            "vision_profile": args.vision_profile,
+            "lanes": args.lanes,
+            "agent": args.agent,
+            "target_fps": args.target_fps,
+            "debug_window": bool(args.debug_window),
+        },
+    )
+    status_writer = RuntimeStatusWriter(
+        output_dir=args.status_dir,
+        instance_id=args.instance_id,
+        mode=args.mode,
+        monitor_index=args.monitor_index,
+        capture_region=capture_region,
+        write_fps=args.status_fps,
+    )
 
     state = GameState.from_data_files(num_lanes=args.lanes)
     ensure_minimum_hand(state, owner="player", minimum_cards=3)
@@ -108,6 +256,15 @@ def main() -> None:
 
     target_frame_time = 1.0 / max(1.0, float(args.target_fps))
     frame_count = 0
+    was_my_turn = False
+    last_suggestion: dict | None = None
+
+    print(
+        f"[CARD-BOT:{args.instance_id}] mode={args.mode} agent={args.agent} lanes={args.lanes} "
+        f"region={capture_region if capture_region is not None else 'full-monitor'} "
+        f"profile={args.vision_profile if args.vision_profile else 'auto'} "
+        f"log={logger.file_path}"
+    )
 
     try:
         while args.max_frames <= 0 or frame_count < args.max_frames:
@@ -128,11 +285,45 @@ def main() -> None:
                 default_enemy_card_id=default_enemy_card_id,
             )
 
-            if my_turn and not state.is_terminal():
+            if my_turn and not was_my_turn and not state.is_terminal():
                 ensure_minimum_hand(state, owner="player", minimum_cards=1)
                 action = agent.select_action(state, owner="player")
-                state.take_turn("player", action)
-                controller.execute_action(action)
+                last_suggestion = dict(action) if action is not None else None
+                logger.log_turn_event(
+                    event="turn_start_detected",
+                    action=last_suggestion,
+                    executed=False,
+                    extra={"mode": args.mode},
+                )
+
+                if args.mode == "autoplay":
+                    state.take_turn("player", action)
+                    controller.execute_action(action)
+                    logger.log_turn_event(
+                        event="action_executed",
+                        action=last_suggestion,
+                        executed=True,
+                    )
+                elif args.mode == "assist":
+                    print(f"[SUGGEST] {action}")
+            was_my_turn = my_turn
+
+            logger.log_frame(
+                frame_index=frame_count,
+                my_turn=my_turn,
+                lane_detections=lane_detections,
+                state_summary=summarize_state(state),
+                suggestion=last_suggestion,
+            )
+            loop_elapsed = time.perf_counter() - tick_start
+            loop_fps = 0.0 if loop_elapsed <= 0 else (1.0 / loop_elapsed)
+            status_writer.update(
+                frame_count=frame_count,
+                fps=loop_fps,
+                my_turn=my_turn,
+                last_action=last_suggestion,
+                state_summary=summarize_state(state),
+            )
 
             debug_frame = overlay.draw_lane_boxes(frame, lane_detector.get_lane_boxes())
             debug_frame = overlay.draw_card_presence(
@@ -143,7 +334,7 @@ def main() -> None:
             debug_frame = overlay.draw_fps(debug_frame)
 
             if args.debug_window:
-                cv2.imshow("cardbot-debug", debug_frame)
+                cv2.imshow(f"cardbot-debug-{args.instance_id}", debug_frame)
                 if cv2.waitKey(1) & 0xFF == 27:
                     break
 
@@ -153,8 +344,13 @@ def main() -> None:
             if sleep_time > 0:
                 time.sleep(sleep_time)
 
+    except Exception as exc:
+        status_writer.set_error(str(exc))
+        raise
     finally:
         capture.close()
+        logger.close()
+        status_writer.close()
         if args.debug_window:
             cv2.destroyAllWindows()
 

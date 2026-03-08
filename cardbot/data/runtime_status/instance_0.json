@@ -1,0 +1,45 @@
+{
+  "instance_id": 0,
+  "pid": 49184,
+  "mode": "observe",
+  "monitor_index": 1,
+  "capture_region": null,
+  "running": true,
+  "started_at": 1772994723.4071097,
+  "updated_at": 1772995138.5665946,
+  "frame_count": 2677,
+  "fps": 9.45,
+  "my_turn": false,
+  "last_action": {
+    "type": "summon",
+    "lane": 0,
+    "hand_index": 0,
+    "card_id": "berserker"
+  },
+  "last_error": null,
+  "state": {
+    "turn": 0,
+    "winner": null,
+    "player_hp": 20,
+    "enemy_hp": 20,
+    "player_hand_size": 3,
+    "enemy_hand_size": 3,
+    "lanes": [
+      {
+        "lane": 0,
+        "player": null,
+        "enemy": "Berserker"
+      },
+      {
+        "lane": 1,
+        "player": null,
+        "enemy": "Berserker"
+      },
+      {
+        "lane": 2,
+        "player": null,
+        "enemy": "Berserker"
+      }
+    ]
+  }
+}
