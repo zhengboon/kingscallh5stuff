@@ -66,28 +66,8 @@ def build_agent(agent_name: str):
 
 
 def summarize_state(state: GameState) -> dict:
-    """Create a compact state summary for session logs."""
-    lanes = []
-    for lane in state.lanes:
-        player_creature = lane.get_creature("player")
-        enemy_creature = lane.get_creature("enemy")
-        lanes.append(
-            {
-                "lane": lane.index,
-                "player": None if player_creature is None else player_creature.name,
-                "enemy": None if enemy_creature is None else enemy_creature.name,
-            }
-        )
-
-    return {
-        "turn": state.turn_number,
-        "winner": state.winner,
-        "player_hp": state.player_hp["player"],
-        "enemy_hp": state.player_hp["enemy"],
-        "player_hand_size": len(state.player_hand),
-        "enemy_hand_size": len(state.enemy_hand),
-        "lanes": lanes,
-    }
+    """Create a reconstructable state snapshot for session logs."""
+    return state.to_snapshot()
 
 
 def parse_args() -> argparse.Namespace:

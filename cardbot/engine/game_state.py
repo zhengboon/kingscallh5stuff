@@ -8,6 +8,7 @@ from cardbot.engine.ability import AbilityLibrary
 from cardbot.engine.creature import Creature
 from cardbot.engine.event_bus import EventBus
 from cardbot.engine.lane import Lane
+from cardbot.engine.modifier import Modifier
 from cardbot.engine.resolver import Resolver
 
 GAME_EVENTS = (
@@ -80,6 +81,69 @@ class GameState:
             starting_hp=starting_hp,
         )
 
+    @classmethod
+    def from_snapshot(
+        cls,
+        snapshot: dict[str, Any],
+        num_lanes: int | None = None,
+        cards_path: str | Path | None = None,
+        abilities_path: str | Path | None = None,
+    ) -> "GameState":
+        """Build a game state from a serialized snapshot payload."""
+        payload = dict(snapshot or {})
+        lane_payloads = payload.get("lanes", [])
+        inferred_lanes = len(lane_payloads) if isinstance(lane_payloads, list) else 3
+        lane_count = int(num_lanes if num_lanes is not None else payload.get("num_lanes", inferred_lanes or 3))
+
+        if lane_count not in (2, 3, 4):
+            raise ValueError("Snapshot lane count must be 2, 3, or 4")
+
+        state = cls.from_data_files(
+            num_lanes=lane_count,
+            cards_path=cards_path,
+            abilities_path=abilities_path,
+        )
+
+        state.turn_number = max(0, int(payload.get("turn", 0)))
+
+        active_player = str(payload.get("active_player", "player"))
+        state.active_player = active_player if active_player in {"player", "enemy"} else "player"
+
+        winner = payload.get("winner")
+        state.winner = str(winner) if winner in {"player", "enemy"} else None
+
+        player_hp = payload.get("player_hp", {})
+        if isinstance(player_hp, dict):
+            for owner in ("player", "enemy"):
+                if owner in player_hp:
+                    state.player_hp[owner] = max(0, int(player_hp[owner]))
+
+        hand = payload.get("hand", {})
+        if isinstance(hand, dict):
+            for owner in ("player", "enemy"):
+                owner_hand = hand.get(owner, [])
+                if isinstance(owner_hand, list):
+                    state.get_hand(owner).clear()
+                    state.get_hand(owner).extend(str(card_id) for card_id in owner_hand)
+
+        if not isinstance(lane_payloads, list):
+            return state
+
+        for lane_index, lane_payload in enumerate(lane_payloads):
+            if lane_index >= lane_count or not isinstance(lane_payload, dict):
+                continue
+            lane = state.lanes[lane_index]
+            for owner in ("player", "enemy"):
+                creature_payload = lane_payload.get(owner)
+                if not isinstance(creature_payload, dict):
+                    continue
+                creature = state._creature_from_snapshot_payload(owner=owner, payload=creature_payload)
+                if creature is None:
+                    continue
+                lane.add_creature(creature, owner=owner)
+
+        return state
+
     @staticmethod
     def _read_json(file_path: Path) -> dict[str, Any]:
         if not file_path.exists():
@@ -90,6 +154,66 @@ class GameState:
     def opponent(owner: str) -> str:
         """Return opposing owner label."""
         return Lane.opponent(owner)
+
+    def _creature_from_snapshot_payload(self, owner: str, payload: dict[str, Any]) -> Creature | None:
+        """Deserialize a creature snapshot into a Creature instance."""
+        alive = bool(payload.get("alive", True))
+        if not alive:
+            return None
+
+        card_id = str(payload.get("card_id", payload.get("name", "observed_unit")))
+        base_atk = int(payload.get("base_atk", payload.get("atk", 0)))
+        hp = max(0, int(payload.get("hp", 1)))
+        max_hp = max(1, int(payload.get("max_hp", max(hp, 1))))
+        base_countdown = max(0, int(payload.get("base_countdown", payload.get("countdown", 0))))
+        countdown = max(0, int(payload.get("countdown", base_countdown)))
+        ability_payload = payload.get("abilities", [])
+        ability_ids = [str(ability_id) for ability_id in ability_payload] if isinstance(ability_payload, list) else []
+
+        if card_id in self.cards_db:
+            creature = self.create_creature_from_card(card_id=card_id, owner=owner)
+            creature.name = str(payload.get("name", creature.name))
+        else:
+            creature = Creature(
+                card_id=card_id,
+                name=str(payload.get("name", card_id)),
+                owner=owner,
+                atk=base_atk,
+                hp=max_hp,
+                countdown=base_countdown,
+                ability_ids=ability_ids,
+            )
+
+        creature.base_atk = base_atk
+        creature.max_hp = max_hp
+        creature.hp = min(hp, max_hp)
+        creature.base_countdown = base_countdown
+        creature.countdown = countdown
+        creature.ability_ids = ability_ids
+        creature.flat_damage_bonus = int(payload.get("flat_damage_bonus", 0))
+        creature.alive = True
+
+        creature.modifiers = []
+        modifiers = payload.get("modifiers", [])
+        if isinstance(modifiers, list):
+            for item in modifiers:
+                if not isinstance(item, dict):
+                    continue
+                duration_turns_raw = item.get("duration_turns")
+                duration_turns = None if duration_turns_raw is None else int(duration_turns_raw)
+                creature.modifiers.append(
+                    Modifier(
+                        id=str(item.get("id", "snapshot_modifier")),
+                        name=str(item.get("name", "Snapshot Modifier")),
+                        atk_bonus=int(item.get("atk_bonus", 0)),
+                        max_hp_bonus=int(item.get("max_hp_bonus", 0)),
+                        damage_bonus_per_hit=int(item.get("damage_bonus_per_hit", 0)),
+                        duration_turns=duration_turns,
+                        stacks=max(1, int(item.get("stacks", 1))),
+                    )
+                )
+
+        return creature
 
     def _register_core_listeners(self) -> None:
         for event_name in GAME_EVENTS:
@@ -102,6 +226,7 @@ class GameState:
         """Trigger all matching abilities for all creatures in stable order."""
         context = dict(kwargs)
         context.pop("state", None)
+        context.pop("owner", None)
         creatures = list(self.iter_creatures())
         for creature in creatures:
             if not creature.alive:
@@ -372,6 +497,48 @@ class GameState:
     def is_terminal(self) -> bool:
         """Whether game has a winner."""
         return self.winner is not None
+
+    @staticmethod
+    def _serialize_creature_snapshot(creature: Creature | None) -> dict[str, Any] | None:
+        if creature is None:
+            return None
+        return {
+            "card_id": creature.card_id,
+            "name": creature.name,
+            "owner": creature.owner,
+            "base_atk": creature.base_atk,
+            "atk": creature.effective_atk,
+            "hp": creature.hp,
+            "max_hp": creature.max_hp,
+            "countdown": creature.countdown,
+            "base_countdown": creature.base_countdown,
+            "abilities": list(creature.ability_ids),
+            "modifiers": [modifier.to_dict() for modifier in creature.modifiers],
+            "flat_damage_bonus": creature.flat_damage_bonus,
+            "alive": creature.alive,
+        }
+
+    def to_snapshot(self) -> dict[str, Any]:
+        """Serialize state into a compact payload that can be restored later."""
+        return {
+            "num_lanes": len(self.lanes),
+            "turn": self.turn_number,
+            "active_player": self.active_player,
+            "winner": self.winner,
+            "player_hp": dict(self.player_hp),
+            "hand": {
+                "player": list(self.player_hand),
+                "enemy": list(self.enemy_hand),
+            },
+            "lanes": [
+                {
+                    "index": lane.index,
+                    "player": self._serialize_creature_snapshot(lane.get_creature("player")),
+                    "enemy": self._serialize_creature_snapshot(lane.get_creature("enemy")),
+                }
+                for lane in self.lanes
+            ],
+        }
 
     def to_dict(self) -> dict[str, Any]:
         """Serialize full game state."""

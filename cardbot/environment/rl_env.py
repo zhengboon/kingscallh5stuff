@@ -181,9 +181,21 @@ class RLEnv(gym.Env):
 
     def reset(self, seed: int | None = None, options: dict[str, Any] | None = None):
         super().reset(seed=seed)
-        self.state = self._build_state()
+        load_error: str | None = None
+        snapshot = None if options is None else options.get("state_snapshot")
+        if isinstance(snapshot, dict):
+            try:
+                self.state = GameState.from_snapshot(snapshot=snapshot, num_lanes=self.num_lanes)
+            except Exception as exc:
+                load_error = str(exc)
+                self.state = self._build_state()
+        else:
+            self.state = self._build_state()
+
         obs = self._get_obs()
-        info = {"valid_action_mask": self.valid_action_mask(owner="player")}
+        info: dict[str, Any] = {"valid_action_mask": self.valid_action_mask(owner="player")}
+        if load_error is not None:
+            info["snapshot_load_error"] = load_error
         return obs, info
 
     def step(self, action: int):

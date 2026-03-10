@@ -1,5 +1,5 @@
 CardBot (Kings Call H5) - Progress Report and Roadmap
-Updated: 2026-03-09
+Updated: 2026-03-10
 
 ==================================================
 1) What is implemented now
@@ -90,6 +90,15 @@ F) Dashboard native browser launcher (new)
   - default browser
 - Supports launching multiple game windows from URL and stopping launched browser processes.
 
+G) Observation-to-scenario workflow (new)
+- Observe logs now store reconstructable engine snapshots (per sampled frame).
+- New script: cardbot/tools/session_to_scenarios.py
+  - extracts unique snapshots from session logs into one scenario JSON file.
+- New script: cardbot/tools/scenario_runner.py
+  - loads one exported scenario into RLEnv for quick testing.
+- RLEnv reset now supports:
+  reset(options={"state_snapshot": ...})
+
 ==================================================
 3) How to run (current)
 ==================================================
@@ -116,6 +125,16 @@ Save detected layout into a profile file:
 Summarize logs:
 - python -m cardbot.tools.session_summary cardbot/data/sessions
 
+Observe and export reconstructable scenarios:
+1. Record an observe session with denser sampling:
+   python -m cardbot.main --mode observe --agent heuristic --target-fps 30 --log-fps 10 --debug-window
+2. Convert session logs into reusable scenarios:
+   python -m cardbot.tools.session_to_scenarios cardbot/data/sessions --output cardbot/data/scenarios/observed_scenarios.json --my-turn-only --max-scenarios 300
+3. Load one scenario into the RL env:
+   python -m cardbot.tools.scenario_runner cardbot/data/scenarios/observed_scenarios.json --index 0
+4. Optional one-step check from that scenario:
+   python -m cardbot.tools.scenario_runner cardbot/data/scenarios/observed_scenarios.json --index 0 --action 0
+
 Runtime status UI (new):
 - Start dashboard:
   python -m cardbot.tools.status_ui --status-dir cardbot/data/runtime_status --host 127.0.0.1 --port 8765
@@ -134,6 +153,20 @@ Stop recording and inspect latest session:
 - Summarize all session logs:
   python -m cardbot.tools.session_summary cardbot/data/sessions
 
+Train a baseline RL policy (tabular Q-learning):
+- Quick smoke run:
+  .venv/bin/python -m cardbot.tools.train_q --episodes 100 --print-every 20 --save-path cardbot/data/models/q_table_smoke.pkl
+- Longer run:
+  .venv/bin/python -m cardbot.tools.train_q --episodes 5000 --print-every 200 --save-path cardbot/data/models/q_table_v1.pkl
+- Tuned example:
+  .venv/bin/python -m cardbot.tools.train_q --episodes 10000 --alpha 0.08 --gamma 0.995 --epsilon-decay 0.999 --print-every 250 --save-path cardbot/data/models/q_table_v2.pkl
+
+Notes:
+- Output model files are pickle artifacts containing:
+  - q_table (state_key -> Q-values)
+  - meta (training config + summary metrics)
+- Training currently uses the deterministic internal engine (not live browser frames).
+
 ==================================================
 4) Known gaps / limitations
 ==================================================
@@ -144,6 +177,8 @@ Stop recording and inspect latest session:
 - Turn indicator template pipeline is prepared, but profile/template calibration per UI skin is still needed.
 - State sync from vision is currently approximate and should be upgraded for production-grade autonomy.
 - Observe mode does not train/update a model yet; it logs data and suggestions only.
+- Observe mode can now export replayable snapshots, but true card identity/OCR quality still limits fidelity.
+- RL training is offline against the deterministic simulator; online/live adaptation from browser play is not integrated yet.
 
 ==================================================
 5) Future plan (recommended order)

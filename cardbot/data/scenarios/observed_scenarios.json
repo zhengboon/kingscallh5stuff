@@ -1,0 +1,380 @@
+{
+  "created_at": 1773150292.8247492,
+  "source_path": "cardbot/data/sessions",
+  "scenario_count": 7,
+  "my_turn_only": true,
+  "include_empty": false,
+  "scenarios": [
+    {
+      "id": "session_20260309_022627_observe_f1107",
+      "source_log": "cardbot/data/sessions/session_20260309_022627_observe.jsonl",
+      "source_mode": "observe",
+      "frame": 1107,
+      "t": 1772994520.3091204,
+      "my_turn": true,
+      "lane_detections": [
+        {
+          "present": true,
+          "confidence": 1.0
+        },
+        {
+          "present": true,
+          "confidence": 1.0
+        },
+        {
+          "present": true,
+          "confidence": 1.0
+        }
+      ],
+      "suggestion": {
+        "type": "summon",
+        "lane": 0,
+        "hand_index": 0,
+        "card_id": "berserker"
+      },
+      "state_snapshot": {
+        "turn": 0,
+        "winner": null,
+        "player_hp": 20,
+        "enemy_hp": 20,
+        "player_hand_size": 3,
+        "enemy_hand_size": 3,
+        "lanes": [
+          {
+            "lane": 0,
+            "player": null,
+            "enemy": "Berserker"
+          },
+          {
+            "lane": 1,
+            "player": null,
+            "enemy": "Berserker"
+          },
+          {
+            "lane": 2,
+            "player": null,
+            "enemy": "Berserker"
+          }
+        ]
+      }
+    },
+    {
+      "id": "session_20260309_022627_observe_f1151",
+      "source_log": "cardbot/data/sessions/session_20260309_022627_observe.jsonl",
+      "source_mode": "observe",
+      "frame": 1151,
+      "t": 1772994525.6661422,
+      "my_turn": true,
+      "lane_detections": [
+        {
+          "present": true,
+          "confidence": 1.0
+        },
+        {
+          "present": true,
+          "confidence": 1.0
+        },
+        {
+          "present": false,
+          "confidence": 0.431
+        }
+      ],
+      "suggestion": {
+        "type": "summon",
+        "lane": 0,
+        "hand_index": 0,
+        "card_id": "berserker"
+      },
+      "state_snapshot": {
+        "turn": 0,
+        "winner": null,
+        "player_hp": 20,
+        "enemy_hp": 20,
+        "player_hand_size": 3,
+        "enemy_hand_size": 3,
+        "lanes": [
+          {
+            "lane": 0,
+            "player": null,
+            "enemy": "Berserker"
+          },
+          {
+            "lane": 1,
+            "player": null,
+            "enemy": "Berserker"
+          },
+          {
+            "lane": 2,
+            "player": null,
+            "enemy": null
+          }
+        ]
+      }
+    },
+    {
+      "id": "session_20260309_022627_observe_f1187",
+      "source_log": "cardbot/data/sessions/session_20260309_022627_observe.jsonl",
+      "source_mode": "observe",
+      "frame": 1187,
+      "t": 1772994530.3280008,
+      "my_turn": true,
+      "lane_detections": [
+        {
+          "present": false,
+          "confidence": 0.414
+        },
+        {
+          "present": false,
+          "confidence": 0.3307
+        },
+        {
+          "present": true,
+          "confidence": 0.6129
+        }
+      ],
+      "suggestion": {
+        "type": "summon",
+        "lane": 0,
+        "hand_index": 0,
+        "card_id": "berserker"
+      },
+      "state_snapshot": {
+        "turn": 0,
+        "winner": null,
+        "player_hp": 20,
+        "enemy_hp": 20,
+        "player_hand_size": 3,
+        "enemy_hand_size": 3,
+        "lanes": [
+          {
+            "lane": 0,
+            "player": null,
+            "enemy": null
+          },
+          {
+            "lane": 1,
+            "player": null,
+            "enemy": null
+          },
+          {
+            "lane": 2,
+            "player": null,
+            "enemy": "Berserker"
+          }
+        ]
+      }
+    },
+    {
+      "id": "session_20260309_022627_observe_f1229",
+      "source_log": "cardbot/data/sessions/session_20260309_022627_observe.jsonl",
+      "source_mode": "observe",
+      "frame": 1229,
+      "t": 1772994536.135586,
+      "my_turn": true,
+      "lane_detections": [
+        {
+          "present": false,
+          "confidence": 0.409
+        },
+        {
+          "present": true,
+          "confidence": 0.7917
+        },
+        {
+          "present": true,
+          "confidence": 0.7691
+        }
+      ],
+      "suggestion": {
+        "type": "summon",
+        "lane": 0,
+        "hand_index": 0,
+        "card_id": "berserker"
+      },
+      "state_snapshot": {
+        "turn": 0,
+        "winner": null,
+        "player_hp": 20,
+        "enemy_hp": 20,
+        "player_hand_size": 3,
+        "enemy_hand_size": 3,
+        "lanes": [
+          {
+            "lane": 0,
+            "player": null,
+            "enemy": null
+          },
+          {
+            "lane": 1,
+            "player": null,
+            "enemy": "Berserker"
+          },
+          {
+            "lane": 2,
+            "player": null,
+            "enemy": "Berserker"
+          }
+        ]
+      }
+    },
+    {
+      "id": "session_20260309_022627_observe_f1231",
+      "source_log": "cardbot/data/sessions/session_20260309_022627_observe.jsonl",
+      "source_mode": "observe",
+      "frame": 1231,
+      "t": 1772994536.3978848,
+      "my_turn": true,
+      "lane_detections": [
+        {
+          "present": false,
+          "confidence": 0.4124
+        },
+        {
+          "present": true,
+          "confidence": 0.9786
+        },
+        {
+          "present": false,
+          "confidence": 0.4995
+        }
+      ],
+      "suggestion": {
+        "type": "summon",
+        "lane": 0,
+        "hand_index": 0,
+        "card_id": "berserker"
+      },
+      "state_snapshot": {
+        "turn": 0,
+        "winner": null,
+        "player_hp": 20,
+        "enemy_hp": 20,
+        "player_hand_size": 3,
+        "enemy_hand_size": 3,
+        "lanes": [
+          {
+            "lane": 0,
+            "player": null,
+            "enemy": null
+          },
+          {
+            "lane": 1,
+            "player": null,
+            "enemy": "Berserker"
+          },
+          {
+            "lane": 2,
+            "player": null,
+            "enemy": null
+          }
+        ]
+      }
+    },
+    {
+      "id": "session_20260309_022627_observe_f1375",
+      "source_log": "cardbot/data/sessions/session_20260309_022627_observe.jsonl",
+      "source_mode": "observe",
+      "frame": 1375,
+      "t": 1772994554.5262988,
+      "my_turn": true,
+      "lane_detections": [
+        {
+          "present": true,
+          "confidence": 0.71
+        },
+        {
+          "present": false,
+          "confidence": 0.3785
+        },
+        {
+          "present": false,
+          "confidence": 0.4375
+        }
+      ],
+      "suggestion": {
+        "type": "summon",
+        "lane": 0,
+        "hand_index": 0,
+        "card_id": "berserker"
+      },
+      "state_snapshot": {
+        "turn": 0,
+        "winner": null,
+        "player_hp": 20,
+        "enemy_hp": 20,
+        "player_hand_size": 3,
+        "enemy_hand_size": 3,
+        "lanes": [
+          {
+            "lane": 0,
+            "player": null,
+            "enemy": "Berserker"
+          },
+          {
+            "lane": 1,
+            "player": null,
+            "enemy": null
+          },
+          {
+            "lane": 2,
+            "player": null,
+            "enemy": null
+          }
+        ]
+      }
+    },
+    {
+      "id": "session_20260309_022627_observe_f1389",
+      "source_log": "cardbot/data/sessions/session_20260309_022627_observe.jsonl",
+      "source_mode": "observe",
+      "frame": 1389,
+      "t": 1772994556.3548567,
+      "my_turn": true,
+      "lane_detections": [
+        {
+          "present": true,
+          "confidence": 0.9642
+        },
+        {
+          "present": false,
+          "confidence": 0.5088
+        },
+        {
+          "present": true,
+          "confidence": 0.7622
+        }
+      ],
+      "suggestion": {
+        "type": "summon",
+        "lane": 0,
+        "hand_index": 0,
+        "card_id": "berserker"
+      },
+      "state_snapshot": {
+        "turn": 0,
+        "winner": null,
+        "player_hp": 20,
+        "enemy_hp": 20,
+        "player_hand_size": 3,
+        "enemy_hand_size": 3,
+        "lanes": [
+          {
+            "lane": 0,
+            "player": null,
+            "enemy": "Berserker"
+          },
+          {
+            "lane": 1,
+            "player": null,
+            "enemy": null
+          },
+          {
+            "lane": 2,
+            "player": null,
+            "enemy": "Berserker"
+          }
+        ]
+      }
+    }
+  ]
+}
