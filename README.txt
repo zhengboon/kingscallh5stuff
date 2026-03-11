@@ -2,6 +2,29 @@ CardBot (Kings Call H5) - Progress Report and Roadmap
 Updated: 2026-03-10
 
 ==================================================
+0) What Codex Is In This Project
+==================================================
+
+Codex is your in-repo AI coding copilot for CardBot.
+
+What Codex can do here:
+- Read and modify your project files.
+- Run commands, start scripts, and validate outputs.
+- Refactor modules, add tools, and fix runtime errors.
+- Help design prompts/workflows for faster iteration.
+
+What Codex cannot do by itself:
+- It cannot directly "see" your browser unless your capture pipeline is running.
+- It cannot click/type in the game unless an input backend is implemented and enabled.
+- It cannot infer hidden game state that vision did not detect.
+
+Best way to prompt Codex:
+- Give a concrete goal.
+- Mention files/modules to change.
+- Include constraints (libraries, performance target, style).
+- Define "done" (tests to run, expected outputs, command examples).
+
+==================================================
 1) What is implemented now
 ==================================================
 
@@ -107,6 +130,9 @@ Single instance:
 1. source .venv/bin/activate
 2. python -m cardbot.main --mode observe --agent heuristic --target-fps 30 --debug-window
 
+Calibrate instances interactively (Phase 1 tool):
+- python -m cardbot.tools.calibrate_capture --instances 4
+
 Single instance with profile:
 - python -m cardbot.main --mode assist --vision-profile cardbot/data/vision_profile.template.json
 
@@ -184,10 +210,10 @@ Notes:
 5) Future plan (recommended order)
 ==================================================
 
-Phase 1: Browser-instance calibration and control hardening
-- Add per-instance calibration capture tool (point-and-click ROI selection)
-- Add robust browser-window anchoring checks before acting
-- Add real input backend for controlled click/drag execution
+Phase 1: Browser-instance calibration and control hardening (COMPLETED)
+- Added interactive calibrate_capture.py tool for point-and-click ROI selection.
+- Added visual window anchoring checks (cv2.matchTemplate) before executing autoplay actions.
+- Implemented real input backend for controlled click/drag via win32 ctypes.
 
 Phase 2: Perception quality upgrades
 - Add card identity matching bank and confidence gating
@@ -212,3 +238,45 @@ Phase 4: Production automation safety
   cardbot/data/profiles/instance_0.json ... instance_3.json
 - Run in assist mode first, verify suggestions match your gameplay.
 - Only move to autoplay after profile and lane/turn detection are stable.
+
+==================================================
+7) Future prompt templates
+==================================================
+
+These are tuned for your 4-browser setup (instances 0,1,2,3):
+
+Prompt A (4-instance bootstrap):
+"Create a one-command launcher that starts 4 observe workers with instance IDs 0..3, monitor index mapping, and per-instance vision profiles at cardbot/data/profiles/instance_{instance_id}.json."
+
+Prompt B (profile calibration pack):
+"Build a calibration flow for 4 instances that saves turn ROI and lane boxes for each instance, then validates profile lane count against --lanes before run."
+
+Prompt C (window-to-instance binding):
+"Add a check that binds each bot instance to the correct browser window region and refuses actions if the wrong window is detected."
+
+Prompt D (live health dashboard):
+"Extend status_ui to show per-instance FPS, stale heartbeat age, my_turn status, last suggestion, and error reason in one table for instances 0..3."
+
+Prompt E (crash recovery):
+"Improve run_multi.py with auto-restart up to 3 times per instance, exponential backoff, and clear crash logs under cardbot/data/runtime_status."
+
+Prompt F (log partitioning):
+"Write each instance's session logs into cardbot/data/sessions/instance_<id>/ and add a summary tool that reports metrics per instance and combined."
+
+Prompt G (observe -> scenario pipeline):
+"Export scenarios separately for each instance and also a merged dataset; include source instance_id in each scenario entry."
+
+Prompt H (quality gate):
+"Add confidence gating so scenario export keeps only frames where turn detection and lane detection confidence are above thresholds."
+
+Prompt I (assist safety):
+"In assist/autoplay, add a guard: only suggest/execute when turn indicator is stable for N consecutive frames and state sync confidence is high."
+
+Prompt J (training on observed states):
+"Train from exported observed scenarios first, then continue simulator training; print before/after win rate and save artifacts with timestamped filenames."
+
+Prompt K (debug workflow):
+"Debug this multi-instance issue: <paste error>. Identify whether it is instance mapping, capture ROI, or process lifecycle; patch and run smoke tests."
+
+Prompt L (task template):
+"Goal: <feature for 4 instances>. Files: <paths>. Constraints: maintain ~30 FPS, keep modules small, no global state. Done when: <checks and expected output>."

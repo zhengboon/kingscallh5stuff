@@ -4,13 +4,16 @@ import json
 from pathlib import Path
 from typing import Any
 
+import cv2
+
+from cardbot.controller.input_controller import InputController
 from cardbot.vision.card_detector import CardDetector
 from cardbot.vision.lane_detector import LaneDetector
 from cardbot.vision.turn_detector import TurnDetector
 
 
 def load_vision_profile(profile_path: str | Path | None) -> dict[str, Any]:
-    """Load vision profile JSON.
+    """Load vision profile JSON and its associated anchor image if it exists.
 
     Returns an empty dictionary when profile_path is None or the file does not exist.
     """
@@ -24,6 +27,19 @@ def load_vision_profile(profile_path: str | Path | None) -> dict[str, Any]:
     payload = json.loads(path.read_text(encoding="utf-8"))
     if not isinstance(payload, dict):
         raise ValueError("Vision profile must be a JSON object")
+
+    # Load associated anchor image if configured
+    if "window_anchor_roi" in payload:
+        anchor_path = path.parent / f"{path.stem}_anchor.png"
+        if anchor_path.exists():
+            image = cv2.imread(str(anchor_path))
+            if image is not None:
+                payload["window_anchor_template"] = image
+            else:
+                print(f"[PROFILE] Warning: failed to decode anchor image at {anchor_path}")
+        else:
+             print(f"[PROFILE] Warning: anchor image not found at {anchor_path}")
+
     return payload
 
 
@@ -31,7 +47,20 @@ def save_vision_profile(profile_path: str | Path, profile: dict[str, Any]) -> Pa
     """Save a vision profile JSON to disk."""
     path = Path(profile_path)
     path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(json.dumps(profile, indent=2), encoding="utf-8")
+    
+    # Extract anchor image if present and remove it from JSON payload
+    # Make a copy to avoid mutating the user's dictionary
+    payload = dict(profile)
+    anchor_template = payload.pop("window_anchor_template", None)
+    
+    if anchor_template is not None:
+        import numpy as np
+        if isinstance(anchor_template, np.ndarray):
+            anchor_path = path.parent / f"{path.stem}_anchor.png"
+            cv2.imwrite(str(anchor_path), anchor_template)
+            print(f"[PROFILE] Saved anchor image -> {anchor_path}")
+
+    path.write_text(json.dumps(payload, indent=2), encoding="utf-8")
     return path
 
 
@@ -40,8 +69,9 @@ def apply_vision_profile(
     lane_detector: LaneDetector,
     turn_detector: TurnDetector,
     card_detector: CardDetector,
+    input_controller: InputController | None = None,
 ) -> None:
-    """Apply profile values to runtime vision components."""
+    """Apply profile values to runtime vision components and controllers."""
     if not profile:
         return
 
@@ -73,5 +103,15 @@ def apply_vision_profile(
     if card_edge_ratio_threshold is not None:
         card_detector.edge_ratio_threshold = float(card_edge_ratio_threshold)
 
-
-# TODO: support loading per-instance template images from profile file.
+    if input_controller:
+        lane_targets_raw = profile.get("lane_targets")
+        if isinstance(lane_targets_raw, list) and lane_targets_raw:
+            targets = {}
+            for i, item in enumerate(lane_targets_raw):
+                if (isinstance(item, list) or isinstance(item, tuple)) and len(item) == 2:
+                    targets[i] = (int(item[0]), int(item[1]))
+            input_controller.set_lane_targets(targets)
+            
+        end_turn = profile.get("end_turn_target")
+        if (isinstance(end_turn, list) or isinstance(end_turn, tuple)) and len(end_turn) == 2:
+            input_controller.set_end_turn_target((int(end_turn[0]), int(end_turn[1])))

@@ -174,6 +174,7 @@ def main() -> None:
     overlay = DebugOverlay(fps_window=30)
     lane_detector.auto_configure(first_frame.shape)
 
+    controller = InputController(capture_region=capture_region)
     profile_payload = load_vision_profile(args.vision_profile)
     if args.vision_profile and not profile_payload:
         print(f"[CARD-BOT:{args.instance_id}] no vision profile at {args.vision_profile}, using auto layout")
@@ -182,7 +183,12 @@ def main() -> None:
         lane_detector=lane_detector,
         turn_detector=turn_detector,
         card_detector=card_detector,
+        input_controller=controller,
     )
+
+    window_anchor_roi = profile_payload.get("window_anchor_roi")
+    window_anchor_template = profile_payload.get("window_anchor_template")
+
     if len(lane_detector.get_lane_boxes()) != args.lanes:
         print(
             f"[CARD-BOT:{args.instance_id}] profile lane count mismatch "
@@ -203,7 +209,6 @@ def main() -> None:
         )
         print(f"[CARD-BOT:{args.instance_id}] saved vision profile -> {saved_path}")
 
-    controller = InputController()
     agent = build_agent(args.agent)
     logger = SessionLogger(
         output_dir=args.session_dir,
@@ -277,13 +282,30 @@ def main() -> None:
                 )
 
                 if args.mode == "autoplay":
-                    state.take_turn("player", action)
-                    controller.execute_action(action)
-                    logger.log_turn_event(
-                        event="action_executed",
-                        action=last_suggestion,
-                        executed=True,
-                    )
+                    can_act = True
+                    if window_anchor_roi is not None and window_anchor_template is not None:
+                        ax, ay, aw, ah = [int(v) for v in window_anchor_roi]
+                        if ay + ah <= frame.shape[0] and ax + aw <= frame.shape[1]:
+                            roi_img = frame[ay:ay+ah, ax:ax+aw]
+                            res = cv2.matchTemplate(roi_img, window_anchor_template, cv2.TM_CCOEFF_NORMED)
+                            _, max_val, _, _ = cv2.minMaxLoc(res)
+                            if max_val < 0.90:
+                                error_msg = f"Anchor validation failed! Confidence: {max_val:.2f}"
+                                print(f"[CARD-BOT:{args.instance_id}] {error_msg}. Aborting action.")
+                                can_act = False
+                                status_writer.set_error(error_msg)
+                        else:
+                            print(f"[CARD-BOT:{args.instance_id}] Anchor bounds invalid. Aborting action.")
+                            can_act = False
+                            
+                    if can_act:
+                        state.take_turn("player", action)
+                        controller.execute_action(action)
+                        logger.log_turn_event(
+                            event="action_executed",
+                            action=last_suggestion,
+                            executed=True,
+                        )
                 elif args.mode == "assist":
                     print(f"[SUGGEST] {action}")
             was_my_turn = my_turn
