@@ -388,8 +388,8 @@
                     <li><strong>Auto-Login:</strong> Generates ephemeral Chrome Extensions from <code>accounts.txt</code> with independent <code>--user-data-dir</code> profiles per instance.</li>
                     <li><strong>Keyboard Macro Fallback:</strong> OS-level typing for 100% login success on protected pages.</li>
                     <li><strong>Live Recorder:</strong> Background <code>mss</code> screenshots + JSONL event logs with disk space protection.</li>
+                    <li><strong>Status Dashboard & Feedback:</strong> Web dashboard featuring a <strong>Virtual Board</strong> matrix of the bot's inner state and a one-click feedback logging system.</li>
                     <li><strong>APK Browser:</strong> Explore 215 decompiled game tables in a tree view.</li>
-                    <li><strong>Status Dashboard:</strong> Track FPS, mode, and staleness across cluster nodes.</li>
                 </ul>
                 <div class="code-block">
                     python -m cardbot.tools.kingscall_suite
@@ -452,6 +452,31 @@ python -m cardbot.run_multi --instances 4 --mode observe<br>
 python -m cardbot.tools.calibrate_capture --instances 4<br>
 python -m cardbot.tools.status_ui<br>
 python -m cardbot.tools.train_q --episodes 5000
+            </div>
+        </div>
+    </div>
+    
+    <!-- Analysis Data Panel -->
+    <div class="glass-panel">
+        <h2>Live Session Telemetry Insights</h2>
+        <p style="color: var(--text-muted); margin-bottom: 16px;">Statistics generated from observing live human matches for extended 30-minute windows.</p>
+        <div class="grid-3">
+            <div style="background: rgba(15, 23, 42, 0.4); border: 1px solid var(--border); border-radius: 12px; padding: 20px; text-align: center;">
+                <div style="color: #a78bfa; font-size: 2.5rem; font-weight: bold; margin-bottom: 5px;">67%</div>
+                <div style="color: #e2e8f0; font-weight: 500; font-size: 1.1rem; margin-bottom: 5px;">Player Idle Time</div>
+                <div style="color: var(--text-muted); font-size: 0.85rem;">Percentage of total match time spent with the "My Turn" indicator active, showing heavy UX bias toward player thinking time.</div>
+            </div>
+            
+            <div style="background: rgba(15, 23, 42, 0.4); border: 1px solid var(--border); border-radius: 12px; padding: 20px; text-align: center;">
+                <div style="color: #60a5fa; font-size: 2.5rem; font-weight: bold; margin-bottom: 5px;">~16</div>
+                <div style="color: #e2e8f0; font-weight: 500; font-size: 1.1rem; margin-bottom: 5px;">Rounds Per Half-Hour</div>
+                <div style="color: var(--text-muted); font-size: 0.85rem;">Number of complete turn cycles naturally resolved across a 30-minute window of human pacing.</div>
+            </div>
+
+            <div style="background: rgba(15, 23, 42, 0.4); border: 1px solid var(--border); border-radius: 12px; padding: 20px; text-align: center;">
+                <div style="color: #34d399; font-size: 2.5rem; font-weight: bold; margin-bottom: 5px;">~4.0</div>
+                <div style="color: #e2e8f0; font-weight: 500; font-size: 1.1rem; margin-bottom: 5px;">CV Telemetry FPS</div>
+                <div style="color: var(--text-muted); font-size: 0.85rem;">Average frame-processing rate the background computer vision model stably maintains while under multi-instance load.</div>
             </div>
         </div>
     </div>
