@@ -1,15 +1,15 @@
 {
   "instance_id": 0,
-  "pid": 49184,
+  "pid": 61660,
   "mode": "observe",
   "monitor_index": 1,
   "capture_region": null,
-  "running": true,
-  "started_at": 1772994723.4071097,
-  "updated_at": 1772995138.5665946,
-  "frame_count": 2677,
-  "fps": 9.45,
-  "my_turn": false,
+  "running": false,
+  "started_at": 1775229662.5704796,
+  "updated_at": 1775231561.9154217,
+  "frame_count": 14786,
+  "fps": 12.81,
+  "my_turn": true,
   "last_action": {
     "type": "summon",
     "lane": 0,
@@ -18,28 +18,91 @@
   },
   "last_error": null,
   "state": {
+    "num_lanes": 3,
     "turn": 0,
+    "active_player": "player",
     "winner": null,
-    "player_hp": 20,
-    "enemy_hp": 20,
-    "player_hand_size": 3,
-    "enemy_hand_size": 3,
+    "player_hp": {
+      "player": 20,
+      "enemy": 20
+    },
+    "hand": {
+      "player": [
+        "berserker",
+        "brute",
+        "guardian"
+      ],
+      "enemy": [
+        "berserker",
+        "brute",
+        "guardian"
+      ]
+    },
     "lanes": [
       {
-        "lane": 0,
+        "index": 0,
         "player": null,
-        "enemy": "Berserker"
+        "enemy": {
+          "card_id": "berserker",
+          "name": "Berserker",
+          "owner": "enemy",
+          "base_atk": 3,
+          "atk": 3,
+          "hp": 5,
+          "max_hp": 5,
+          "countdown": 1,
+          "base_countdown": 1,
+          "abilities": [
+            "rage_hit_2"
+          ],
+          "modifiers": [],
+          "flat_damage_bonus": 0,
+          "alive": true
+        }
       },
       {
-        "lane": 1,
+        "index": 1,
         "player": null,
-        "enemy": "Berserker"
+        "enemy": {
+          "card_id": "berserker",
+          "name": "Berserker",
+          "owner": "enemy",
+          "base_atk": 3,
+          "atk": 3,
+          "hp": 5,
+          "max_hp": 5,
+          "countdown": 1,
+          "base_countdown": 1,
+          "abilities": [
+            "rage_hit_2"
+          ],
+          "modifiers": [],
+          "flat_damage_bonus": 0,
+          "alive": true
+        }
       },
       {
-        "lane": 2,
+        "index": 2,
         "player": null,
-        "enemy": "Berserker"
+        "enemy": {
+          "card_id": "berserker",
+          "name": "Berserker",
+          "owner": "enemy",
+          "base_atk": 3,
+          "atk": 3,
+          "hp": 5,
+          "max_hp": 5,
+          "countdown": 1,
+          "base_countdown": 1,
+          "abilities": [
+            "rage_hit_2"
+          ],
+          "modifiers": [],
+          "flat_damage_bonus": 0,
+          "alive": true
+        }
       }
     ]
-  }
+  },
+  "stopped_at": 1775231561.915412
 }

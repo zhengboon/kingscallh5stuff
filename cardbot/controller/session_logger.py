@@ -1,9 +1,12 @@
 from __future__ import annotations
 
 import json
+import logging
 import time
 from pathlib import Path
 from typing import Any
+
+logger = logging.getLogger(__name__)
 
 
 class SessionLogger:
@@ -94,8 +97,18 @@ class SessionLogger:
 
     def close(self) -> None:
         """Close file handle."""
-        if not self._fp.closed:
-            self._fp.close()
+        try:
+            if not self._fp.closed:
+                self._fp.flush()
+                self._fp.close()
+        except OSError:
+            logger.exception("Failed to close session log %s", self.file_path)
+
+    def __enter__(self) -> "SessionLogger":
+        return self
+
+    def __exit__(self, exc_type: type | None, exc: BaseException | None, tb: object) -> None:
+        self.close()
 
 
 # TODO: add a compact binary mode if longer sessions become I/O bound.

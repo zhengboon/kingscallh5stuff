@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import logging
 from pathlib import Path
 from typing import Any
 
@@ -10,6 +11,8 @@ from cardbot.controller.input_controller import InputController
 from cardbot.vision.card_detector import CardDetector
 from cardbot.vision.lane_detector import LaneDetector
 from cardbot.vision.turn_detector import TurnDetector
+
+logger = logging.getLogger(__name__)
 
 
 def load_vision_profile(profile_path: str | Path | None) -> dict[str, Any]:
@@ -36,9 +39,9 @@ def load_vision_profile(profile_path: str | Path | None) -> dict[str, Any]:
             if image is not None:
                 payload["window_anchor_template"] = image
             else:
-                print(f"[PROFILE] Warning: failed to decode anchor image at {anchor_path}")
+                logger.warning("Failed to decode anchor image at %s", anchor_path)
         else:
-             print(f"[PROFILE] Warning: anchor image not found at {anchor_path}")
+            logger.warning("Anchor image not found at %s", anchor_path)
 
     return payload
 
@@ -58,7 +61,7 @@ def save_vision_profile(profile_path: str | Path, profile: dict[str, Any]) -> Pa
         if isinstance(anchor_template, np.ndarray):
             anchor_path = path.parent / f"{path.stem}_anchor.png"
             cv2.imwrite(str(anchor_path), anchor_template)
-            print(f"[PROFILE] Saved anchor image -> {anchor_path}")
+            logger.info("Saved anchor image -> %s", anchor_path)
 
     path.write_text(json.dumps(payload, indent=2), encoding="utf-8")
     return path
@@ -79,7 +82,7 @@ def apply_vision_profile(
     if isinstance(lane_coords_raw, list) and lane_coords_raw:
         lane_coords: list[tuple[int, int, int, int]] = []
         for item in lane_coords_raw:
-            if not (isinstance(item, list) or isinstance(item, tuple)) or len(item) != 4:
+            if not isinstance(item, (list, tuple)) or len(item) != 4:
                 continue
             x, y, w, h = item
             lane_coords.append((int(x), int(y), int(w), int(h)))
@@ -87,7 +90,7 @@ def apply_vision_profile(
             lane_detector.set_lane_coords(lane_coords)
 
     turn_roi_raw = profile.get("turn_roi")
-    if (isinstance(turn_roi_raw, list) or isinstance(turn_roi_raw, tuple)) and len(turn_roi_raw) == 4:
+    if isinstance(turn_roi_raw, (list, tuple)) and len(turn_roi_raw) == 4:
         x, y, w, h = turn_roi_raw
         turn_detector.set_roi((int(x), int(y), int(w), int(h)))
 
@@ -108,10 +111,10 @@ def apply_vision_profile(
         if isinstance(lane_targets_raw, list) and lane_targets_raw:
             targets = {}
             for i, item in enumerate(lane_targets_raw):
-                if (isinstance(item, list) or isinstance(item, tuple)) and len(item) == 2:
+                if isinstance(item, (list, tuple)) and len(item) == 2:
                     targets[i] = (int(item[0]), int(item[1]))
             input_controller.set_lane_targets(targets)
             
         end_turn = profile.get("end_turn_target")
-        if (isinstance(end_turn, list) or isinstance(end_turn, tuple)) and len(end_turn) == 2:
+        if isinstance(end_turn, (list, tuple)) and len(end_turn) == 2:
             input_controller.set_end_turn_target((int(end_turn[0]), int(end_turn[1])))

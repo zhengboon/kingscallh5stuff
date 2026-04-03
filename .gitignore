@@ -16,8 +16,19 @@ env/
 # Local runtime/log artifacts
 cardbot/data/sessions/
 
+# Local reverse-engineering artifacts
+analysis/
+
 # OS/editor noise
 .DS_Store
 Thumbs.db
 .vscode/
 .idea/
+
+# Large binaries and tools
+*.apk
+.tools/
+
+# Accounts
+cardbot/data/accounts.txt
+cardbot/data/accounts_backup.txt

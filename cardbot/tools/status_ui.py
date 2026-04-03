@@ -139,6 +139,46 @@ HTML_PAGE = """<!DOCTYPE html>
       max-height: 120px;
       overflow: auto;
     }
+    .board {
+      margin-top: 10px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 10px;
+      background: #0b1220;
+    }
+    .board-header {
+      display: flex;
+      justify-content: space-between;
+      color: var(--ok);
+      font-weight: 600;
+      font-size: 13px;
+      margin-bottom: 8px;
+    }
+    .lane-row {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 6px;
+    }
+    .lane-slot {
+      flex: 1;
+      border: 1px solid var(--line);
+      background: var(--panel);
+      border-radius: 6px;
+      padding: 6px;
+      margin: 0 4px;
+      font-size: 11px;
+      text-align: center;
+      min-height: 40px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+    .lane-slot.empty { opacity: 0.3; }
+    .lane-slot.enemy { border-color: var(--warn); color: var(--warn); }
+    .lane-slot.player { border-color: var(--text); color: var(--text); }
+    .slot-title { font-weight: bold; margin-bottom: 2px; }
+    .slot-stats { display: flex; justify-content: center; gap: 6px; }
+    .btn.feedback { border-color: #3b82f6; color: #60a5fa; margin-top: 10px; width: 100%; }
   </style>
 </head>
 <body>
@@ -175,6 +215,32 @@ HTML_PAGE = """<!DOCTYPE html>
       if (status === 'RUNNING') return 'running';
       if (status === 'STALE') return 'stale';
       return 'stopped';
+    }
+
+    async function submitFeedback(instId) {
+      const btn = document.getElementById('fb-btn-' + instId);
+      const stateRaw = btn.getAttribute('data-state');
+      if (!stateRaw) return;
+      const notes = prompt("What is incorrect with Instance " + instId + "? (e.g., enemy lane 2 is empty but bot sees enemy)");
+      if (!notes) return;
+      
+      try {
+        const payload = JSON.parse(stateRaw);
+        const res = await fetch('/api/feedback', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+             instance_id: instId,
+             notes: notes,
+             state: payload
+          })
+        });
+        const data = await res.json();
+        if (res.ok) alert("Feedback submitted! Logged to " + data.file);
+        else alert("Failed to submit feedback: " + data.error);
+      } catch (err) {
+        alert("Error: " + err);
+      }
     }
 
     async function launchBrowsers() {
@@ -239,24 +305,59 @@ HTML_PAGE = """<!DOCTYPE html>
       (data.instances || []).forEach(inst => {
         const card = document.createElement('div');
         card.className = 'card';
+        const stateData = inst.state || {};
         const lastAction = inst.last_action ? JSON.stringify(inst.last_action) : '-';
         const err = inst.last_error ? String(inst.last_error) : '-';
+        const safeStateStr = JSON.stringify(stateData).replace(/"/g, '&quot;');
+        
+        let boardHtml = '';
+        if (stateData.lanes && stateData.lanes.length > 0) {
+           const pHP = stateData.player_hp ? (stateData.player_hp.player || 0) : 0;
+           const eHP = stateData.player_hp ? (stateData.player_hp.enemy || 0) : 0;
+           
+           boardHtml += '<div class="board">';
+           boardHtml += '<div class="board-header"><span>E: ' + eHP + ' HP</span> <span style="text-align:right">P: ' + pHP + ' HP</span></div>';
+           
+           stateData.lanes.forEach(lane => {
+              boardHtml += '<div class="lane-row">';
+              // Enemy Slot
+              if (lane.enemy && lane.enemy.alive) {
+                 const atk = lane.enemy.atk !== undefined ? lane.enemy.atk : lane.enemy.base_atk;
+                 boardHtml += '<div class="lane-slot enemy"><div class="slot-title">' + (lane.enemy.name || lane.enemy.card_id) + '</div><div class="slot-stats"><span>A: ' + atk + '</span><span>H: ' + lane.enemy.hp + '</span><span>⏱ ' + lane.enemy.countdown + '</span></div></div>';
+              } else {
+                 boardHtml += '<div class="lane-slot empty">Empty</div>';
+              }
+              // Lane Label
+              boardHtml += '<div style="display:flex;align-items:center;font-size:10px;color:#94a3b8;margin:0 4px;">L' + lane.index + '</div>';
+              // Player Slot
+              if (lane.player && lane.player.alive) {
+                 const atk = lane.player.atk !== undefined ? lane.player.atk : lane.player.base_atk;
+                 boardHtml += '<div class="lane-slot player"><div class="slot-title">' + (lane.player.name || lane.player.card_id) + '</div><div class="slot-stats"><span>A: ' + atk + '</span><span>H: ' + lane.player.hp + '</span><span>⏱ ' + lane.player.countdown + '</span></div></div>';
+              } else {
+                 boardHtml += '<div class="lane-slot empty">Empty</div>';
+              }
+              boardHtml += '</div>';
+           });
+           boardHtml += '</div>';
+        }
 
         card.innerHTML = `
-          <div class=\"top\">
-            <div class=\"title\">Instance ${inst.instance_id}</div>
-            <div class=\"badge ${statusClass(inst.health)}\">${inst.health}</div>
+          <div class="top">
+            <div class="title">Instance ${inst.instance_id}</div>
+            <div class="badge ${statusClass(inst.health)}">${inst.health}</div>
           </div>
-          <div class=\"kv\"><span class=\"label\">PID:</span> ${inst.pid || '-'}</div>
-          <div class=\"kv\"><span class=\"label\">Mode:</span> ${inst.mode || '-'}</div>
-          <div class=\"kv\"><span class=\"label\">FPS:</span> ${inst.fps || 0}</div>
-          <div class=\"kv\"><span class=\"label\">Frames:</span> ${inst.frame_count || 0}</div>
-          <div class=\"kv\"><span class=\"label\">My Turn:</span> ${inst.my_turn ? 'yes' : 'no'}</div>
-          <div class=\"kv\"><span class=\"label\">Last Beat:</span> ${fmtTime(inst.updated_at)} (${inst.age_sec.toFixed(1)}s ago)</div>
-          <div class=\"kv\"><span class=\"label\">Last Action:</span></div>
+          <div class="kv"><span class="label">PID:</span> ${inst.pid || '-'}</div>
+          <div class="kv"><span class="label">Mode:</span> ${inst.mode || '-'}</div>
+          <div class="kv"><span class="label">FPS:</span> ${inst.fps || 0}</div>
+          <div class="kv"><span class="label">Frames:</span> ${inst.frame_count || 0}</div>
+          <div class="kv"><span class="label">My Turn:</span> ${inst.my_turn ? 'yes' : 'no'}</div>
+          <div class="kv"><span class="label">Last Beat:</span> ${fmtTime(inst.updated_at)} (${inst.age_sec.toFixed(1)}s ago)</div>
+          <div class="kv"><span class="label">Last Action:</span></div>
           <pre>${lastAction}</pre>
-          <div class=\"kv\"><span class=\"label\">Last Error:</span></div>
+          <div class="kv"><span class="label">Last Error:</span></div>
           <pre>${err}</pre>
+          ${boardHtml}
+          <button id="fb-btn-${inst.instance_id}" class="btn feedback" data-state="${safeStateStr}" onclick="submitFeedback(${inst.instance_id})">Leave Feedback</button>
         `;
         grid.appendChild(card);
       });
@@ -409,7 +510,13 @@ def _resolve_browser_executable(browser: str) -> str | None:
     return None
 
 
-def _launch_browser_windows(url: str, count: int, browser: str) -> tuple[list[int], str]:
+def _launch_browser_windows(
+    url: str, 
+    count: int, 
+    browser: str, 
+    isolate_profiles: bool = False,
+    accounts: list[str] | None = None
+) -> tuple[list[int], str]:
     if os.name != "nt":
         raise RuntimeError("Native browser launching is only supported on Windows hosts.")
 
@@ -426,10 +533,20 @@ def _launch_browser_windows(url: str, count: int, browser: str) -> tuple[list[in
         raise RuntimeError(f"Browser executable not found for: {browser}")
 
     launched_pids: list[int] = []
-    for _ in range(count):
+    for i in range(count):
         args = [browser_exe]
         if browser in {"edge", "chrome"}:
             args.append("--new-window")
+            if isolate_profiles:
+                profile_dir = Path("cardbot/data/browser_profiles") / f"instance_{i}"
+                profile_dir.mkdir(parents=True, exist_ok=True)
+                args.append(f"--user-data-dir={profile_dir.absolute()}")
+                
+                if accounts and i < len(accounts):
+                    from cardbot.tools.autologin_manager import generate_autologin_extension
+                    ext_path = generate_autologin_extension(i, accounts[i])
+                    if ext_path:
+                        args.append(f"--load-extension={ext_path}")
         args.append(url)
 
         proc = subprocess.Popen(args)
@@ -514,7 +631,9 @@ class StatusHandler(BaseHTTPRequestHandler):
                 return
 
             try:
-                launched_pids, launched_browser = _launch_browser_windows(url=url, count=count, browser=browser)
+                launched_pids, launched_browser = _launch_browser_windows(
+                    url=url, count=count, browser=browser, isolate_profiles=False
+                )
             except Exception as exc:
                 self._send_json({"error": str(exc)}, status_code=500)
                 return
@@ -544,6 +663,22 @@ class StatusHandler(BaseHTTPRequestHandler):
 
             type(self).launched_browser_pids = still_running
             self._send_json({"ok": True, "stopped": stopped})
+            return
+
+        if parsed.path == "/api/feedback":
+            payload = self._read_json_body()
+            instance_id = payload.get("instance_id", "unknown")
+            feedback_dir = type(self).status_dir.parent / "feedback"
+            feedback_dir.mkdir(parents=True, exist_ok=True)
+            
+            ts = time.strftime("%Y%m%d_%H%M%S")
+            filename = f"human_feedback_{ts}_{instance_id}.jsonl"
+            file_path = feedback_dir / filename
+            
+            with file_path.open("a", encoding="utf-8") as f:
+                f.write(json.dumps(payload, separators=(",", ":")) + "\n")
+                
+            self._send_json({"ok": True, "file": str(file_path.absolute())})
             return
 
         self._send_json({"error": "not found"}, status_code=404)

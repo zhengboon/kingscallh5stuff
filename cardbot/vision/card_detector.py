@@ -9,6 +9,9 @@ from cardbot.vision.template_matcher import TemplateMatcher
 class CardDetector:
     """Detects card presence in lane crops using templates + edge density."""
 
+    # Multiplier to convert raw edge ratio (typically 0.0–0.05) into a 0–1 confidence score.
+    EDGE_CONFIDENCE_SCALE = 30.0
+
     def __init__(
         self,
         templates: list[np.ndarray] | None = None,
@@ -43,7 +46,7 @@ class CardDetector:
         edges = cv2.Canny(gray, 75, 150)
         edge_ratio = float(np.count_nonzero(edges)) / float(edges.size)
 
-        edge_confidence = min(1.0, edge_ratio * 30.0)
+        edge_confidence = min(1.0, edge_ratio * self.EDGE_CONFIDENCE_SCALE)
         confidence = max(best_template_score, edge_confidence)
 
         is_present = best_template_score >= self.match_threshold or edge_ratio >= self.edge_ratio_threshold

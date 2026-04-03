@@ -1,0 +1,518 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KingsCall H5 Data Suite</title>
+    <style>
+        :root {
+            --bg: #0b1120;
+            --panel: rgba(30, 41, 59, 0.7);
+            --border: rgba(148, 163, 184, 0.2);
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --accent: #3b82f6;
+            --accent-glow: rgba(59, 130, 246, 0.5);
+        }
+
+        body {
+            background-color: var(--bg);
+            background-image:
+                radial-gradient(circle at 15% 50%, rgba(59, 130, 246, 0.15) 0%, transparent 50%),
+                radial-gradient(circle at 85% 30%, rgba(139, 92, 246, 0.15) 0%, transparent 50%);
+            color: var(--text-main);
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 60px;
+            padding: 40px 0;
+        }
+
+        h1 {
+            font-size: 3.5rem;
+            font-weight: 800;
+            margin: 0 0 10px 0;
+            background: linear-gradient(135deg, #60a5fa, #c084fc);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .subtitle {
+            font-size: 1.25rem;
+            color: var(--text-muted);
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .version-badge {
+            display: inline-block;
+            background: rgba(59, 130, 246, 0.2);
+            border: 1px solid rgba(59, 130, 246, 0.4);
+            border-radius: 20px;
+            padding: 4px 14px;
+            font-size: 0.85rem;
+            color: #93c5fd;
+            margin-top: 12px;
+        }
+
+        .glass-panel {
+            background: var(--panel);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .glass-panel:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 25px 50px rgba(0,0,0,0.4), 0 0 20px var(--accent-glow);
+        }
+
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+        }
+
+        .grid-3 {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 20px;
+        }
+
+        h2 {
+            font-size: 1.8rem;
+            margin-top: 0;
+            color: #e2e8f0;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 10px;
+        }
+
+        h3 {
+            color: #bae6fd;
+            font-size: 1.3rem;
+        }
+
+        ul {
+            padding-left: 20px;
+            color: var(--text-muted);
+        }
+
+        li {
+            margin-bottom: 8px;
+        }
+
+        .code-block {
+            background: rgba(15, 23, 42, 0.9);
+            border-radius: 8px;
+            padding: 15px;
+            font-family: 'Consolas', monospace;
+            color: #34d399;
+            border: 1px solid var(--border);
+            overflow-x: auto;
+            font-size: 0.9rem;
+        }
+
+        .button {
+            display: inline-block;
+            background: linear-gradient(to right, #3b82f6, #6366f1);
+            color: white;
+            text-decoration: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-weight: 600;
+            transition: opacity 0.2s;
+            border: none;
+            cursor: pointer;
+            margin-top: 15px;
+        }
+
+        .button:hover {
+            opacity: 0.9;
+        }
+
+        .stat-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+            gap: 16px;
+            margin-top: 20px;
+        }
+
+        .stat-card {
+            background: rgba(15, 23, 42, 0.5);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 18px 12px;
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: 2.2rem;
+            font-weight: 700;
+            color: #60a5fa;
+            margin-bottom: 4px;
+        }
+
+        .stat-label {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .bar-chart {
+            margin-top: 16px;
+        }
+
+        .bar-row {
+            display: flex;
+            align-items: center;
+            margin-bottom: 8px;
+            font-size: 0.85rem;
+        }
+
+        .bar-label {
+            width: 90px;
+            text-align: right;
+            padding-right: 12px;
+            color: var(--text-muted);
+            flex-shrink: 0;
+        }
+
+        .bar-track {
+            flex-grow: 1;
+            background: rgba(15, 23, 42, 0.5);
+            border-radius: 4px;
+            height: 22px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .bar-fill {
+            height: 100%;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            padding-left: 8px;
+            font-size: 0.75rem;
+            color: white;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+
+        .bar-fill.physical  { background: linear-gradient(90deg, #6b7280, #9ca3af); }
+        .bar-fill.fire      { background: linear-gradient(90deg, #dc2626, #f97316); }
+        .bar-fill.holy      { background: linear-gradient(90deg, #eab308, #fde047); color: #422006; }
+        .bar-fill.arcane    { background: linear-gradient(90deg, #7c3aed, #a78bfa); }
+        .bar-fill.frost     { background: linear-gradient(90deg, #0891b2, #67e8f9); color: #164e63; }
+        .bar-fill.lightning  { background: linear-gradient(90deg, #2563eb, #60a5fa); }
+        .bar-fill.shadow    { background: linear-gradient(90deg, #4c1d95, #8b5cf6); }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.9rem;
+        }
+
+        th, td {
+            padding: 10px 14px;
+            text-align: left;
+            border-bottom: 1px solid var(--border);
+        }
+
+        th {
+            color: #93c5fd;
+            font-weight: 600;
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        td {
+            color: var(--text-muted);
+        }
+
+        td:first-child {
+            color: var(--text-main);
+            font-weight: 500;
+        }
+
+        code {
+            background: rgba(15, 23, 42, 0.7);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 0.85em;
+            color: #a5b4fc;
+        }
+
+        .section-label {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            color: #64748b;
+            margin-bottom: 12px;
+            font-weight: 600;
+        }
+
+        footer {
+            text-align: center;
+            padding: 40px 0 20px;
+            color: #475569;
+            font-size: 0.85rem;
+        }
+
+        footer a {
+            color: #60a5fa;
+            text-decoration: none;
+        }
+
+        @media (max-width: 768px) {
+            .grid-2, .grid-3 {
+                grid-template-columns: 1fr;
+            }
+            h1 {
+                font-size: 2.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <h1>KingsCall H5 Data Suite</h1>
+        <p class="subtitle">Advanced automation, real-time telemetry, and APK static analysis framework for KingsCall H5.</p>
+        <div class="version-badge">v1.1.7.0 &mdash; Cocos Creator 3.8.7</div>
+    </header>
+
+    <!-- Stats overview -->
+    <div class="glass-panel">
+        <div class="section-label">APK Data Extracted</div>
+        <div class="stat-grid">
+            <div class="stat-card">
+                <div class="stat-number">7,785</div>
+                <div class="stat-label">Cards</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number">6,700</div>
+                <div class="stat-label">Creatures</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number">552</div>
+                <div class="stat-label">Skills</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number">372</div>
+                <div class="stat-label">Status Effects</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number">2,649</div>
+                <div class="stat-label">Compound Effects</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number">13</div>
+                <div class="stat-label">Factions</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number">215</div>
+                <div class="stat-label">Data Tables</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number">31</div>
+                <div class="stat-label">Core CSVs</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Damage types -->
+    <div class="glass-panel">
+        <h2>Damage Type Distribution</h2>
+        <p style="color: var(--text-muted); margin-bottom: 20px;">Across 6,700 creature stat definitions extracted from <code>monster.json</code>.</p>
+        <div class="bar-chart">
+            <div class="bar-row">
+                <span class="bar-label">Physical</span>
+                <div class="bar-track"><div class="bar-fill physical" style="width: 57.8%;">3,873 (57.8%)</div></div>
+            </div>
+            <div class="bar-row">
+                <span class="bar-label">Fire</span>
+                <div class="bar-track"><div class="bar-fill fire" style="width: 10.6%;">709</div></div>
+            </div>
+            <div class="bar-row">
+                <span class="bar-label">Arcane</span>
+                <div class="bar-track"><div class="bar-fill arcane" style="width: 7.6%;">507</div></div>
+            </div>
+            <div class="bar-row">
+                <span class="bar-label">Holy</span>
+                <div class="bar-track"><div class="bar-fill holy" style="width: 7.2%;">482</div></div>
+            </div>
+            <div class="bar-row">
+                <span class="bar-label">Frost</span>
+                <div class="bar-track"><div class="bar-fill frost" style="width: 6.5%;">433</div></div>
+            </div>
+            <div class="bar-row">
+                <span class="bar-label">Lightning</span>
+                <div class="bar-track"><div class="bar-fill lightning" style="width: 6.3%;">421</div></div>
+            </div>
+            <div class="bar-row">
+                <span class="bar-label">Shadow</span>
+                <div class="bar-track"><div class="bar-fill shadow" style="width: 4.1%;">275</div></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- GUI -->
+    <div class="glass-panel">
+        <h2>Unified GUI Suite</h2>
+        <p>All monitoring and orchestration tools combined into a single Python application.</p>
+
+        <div class="grid-2" style="margin-top: 20px;">
+            <div>
+                <h3>Features</h3>
+                <ul>
+                    <li><strong>Game Launcher:</strong> Bootstrap 1&ndash;12 instances via IE, Edge, or Chrome.</li>
+                    <li><strong>Auto-Login:</strong> Generates ephemeral Chrome Extensions from <code>accounts.txt</code> with independent <code>--user-data-dir</code> profiles per instance.</li>
+                    <li><strong>Keyboard Macro Fallback:</strong> OS-level typing for 100% login success on protected pages.</li>
+                    <li><strong>Live Recorder:</strong> Background <code>mss</code> screenshots + JSONL event logs with disk space protection.</li>
+                    <li><strong>APK Browser:</strong> Explore 215 decompiled game tables in a tree view.</li>
+                    <li><strong>Status Dashboard:</strong> Track FPS, mode, and staleness across cluster nodes.</li>
+                </ul>
+                <div class="code-block">
+                    python -m cardbot.tools.kingscall_suite
+                </div>
+            </div>
+            <div>
+                <div style="background: #0f172a; border-radius: 8px; border: 1px solid var(--border); padding: 15px; height: 100%; box-sizing: border-box; display: flex; flex-direction: column;">
+                    <div style="display: flex; gap: 10px; border-bottom: 1px solid var(--border); padding-bottom: 10px; margin-bottom: 15px;">
+                        <span style="color: #60a5fa; font-weight: bold; border-bottom: 2px solid #60a5fa; padding-bottom: 10px; margin-bottom: -11px;">Game Launcher</span>
+                        <span style="color: #94a3b8;">Live Capture</span>
+                        <span style="color: #94a3b8;">APK Data</span>
+                        <span style="color: #94a3b8;">Status</span>
+                    </div>
+                    <div style="color: #cbd5e1; font-size: 0.9rem; flex-grow: 1;">
+                        <span style="color: #94a3b8;">Target URL:</span> https://www.xstargame.com/game/...<br><br>
+                        <span style="color: #94a3b8;">Browser:</span> Internet Explorer (Native)<br>
+                        <span style="color: #94a3b8;">Instances:</span> 4<br><br>
+                        <button style="background: #3b82f6; color: white; border: none; padding: 8px 16px; border-radius: 4px; pointer-events: none;">Launch Windows</button>
+                        <button style="background: #1e293b; color: #94a3b8; border: 1px solid rgba(148,163,184,0.3); padding: 8px 16px; border-radius: 4px; pointer-events: none; margin-left: 6px;">Auto-Login</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="grid-2">
+        <!-- APK Panel -->
+        <div class="glass-panel">
+            <h2>APK Analysis</h2>
+            <table>
+                <tr><th>Property</th><th>Value</th></tr>
+                <tr><td>Engine</td><td>Cocos Creator 3.8.7</td></tr>
+                <tr><td>SDK</td><td>Wancms (WeChat / Alipay)</td></tr>
+                <tr><td>Firebase</td><td>Auth, Realtime DB, Analytics</td></tr>
+                <tr><td>CDN</td><td><code>cdn.xstargame.com</code></td></tr>
+            </table>
+            <h3>Key Mechanics</h3>
+            <ul>
+                <li>6-tier card evolution with exponential fusion decay</li>
+                <li>33+ AOE geometry patterns</li>
+                <li>Dragon Forms: 5 wing + 5 scale variants</li>
+                <li>Race aura synergies across 13 factions</li>
+                <li>Full pet, guild, and gacha systems</li>
+            </ul>
+        </div>
+
+        <!-- Architecture Panel -->
+        <div class="glass-panel">
+            <h2>Modular Architecture</h2>
+            <ul>
+                <li><strong>Vision:</strong> OpenCV template matching + edge density detection, MSS capture.</li>
+                <li><strong>Engine:</strong> Deterministic game state with event bus, abilities, modifiers, combat resolver.</li>
+                <li><strong>Agents:</strong> Heuristic priority rules + random baseline.</li>
+                <li><strong>RL Env:</strong> Gymnasium-compliant wrapper for training.</li>
+                <li><strong>Logging:</strong> Structured <code>logging</code> module throughout, JSONL session traces.</li>
+                <li><strong>Recorder:</strong> Disk-space-aware background capture with auto-stop.</li>
+            </ul>
+            <div class="code-block" style="margin-top: 12px;">
+python -m cardbot.run_multi --instances 4 --mode observe<br>
+python -m cardbot.tools.calibrate_capture --instances 4<br>
+python -m cardbot.tools.status_ui<br>
+python -m cardbot.tools.train_q --episodes 5000
+            </div>
+        </div>
+    </div>
+
+    <!-- Status effects & game data -->
+    <div class="glass-panel">
+        <h2>Status Effects & Abilities</h2>
+        <p style="color: var(--text-muted); margin-bottom: 16px;">372 status effects across multiple categories, extracted from <code>Status.json</code>.</p>
+        <div class="grid-3">
+            <div>
+                <h3 style="color: #f87171;">Damage-over-Time</h3>
+                <ul>
+                    <li>Burning 1&ndash;7 (Fire, 1&ndash;5 turns)</li>
+                    <li>Poisoned 1&ndash;3 (Shadow, 5 turns)</li>
+                    <li>Decaying 3&ndash;7 (Shadow, 1 turn)</li>
+                </ul>
+            </div>
+            <div>
+                <h3 style="color: #60a5fa;">Control Effects</h3>
+                <ul>
+                    <li>Frozen &mdash; cannot move</li>
+                    <li>Stunned &mdash; cannot act</li>
+                    <li>Charmed &mdash; controlled by enemy</li>
+                    <li>Blinded &mdash; cannot attack</li>
+                    <li>Amnesic &mdash; abilities lost</li>
+                </ul>
+            </div>
+            <div>
+                <h3 style="color: #34d399;">Stat Modifiers</h3>
+                <ul>
+                    <li>Weakened &minus;1 to &minus;3 ATK</li>
+                    <li>Withered &minus;5 to &minus;6 Max HP</li>
+                    <li>ATK +1/+2 (permanent)</li>
+                    <li>Regeneration +2 HP/turn</li>
+                    <li>Hero's Bane (1 dmg/turn to hero)</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- Data files table -->
+    <div class="glass-panel">
+        <h2>Core Data Files</h2>
+        <table>
+            <tr><th>File</th><th>Records</th><th>Description</th></tr>
+            <tr><td><code>card.json</code></td><td>7,785</td><td>Playable cards with quality, race, evolution, abilities</td></tr>
+            <tr><td><code>monster.json</code></td><td>6,700</td><td>Combat stats: HP, ATK, speed, damage type</td></tr>
+            <tr><td><code>Skill.json</code></td><td>552</td><td>Skills with damage, AOE, status application</td></tr>
+            <tr><td><code>Status.json</code></td><td>372</td><td>Buffs, debuffs, DoTs with duration</td></tr>
+            <tr><td><code>Effect.json</code></td><td>2,649</td><td>Compound effects: auras, dragon forms, synergies</td></tr>
+            <tr><td><code>items.json</code></td><td>&mdash;</td><td>Equipment, consumables, cosmetics</td></tr>
+            <tr><td><code>guildskill.json</code></td><td>200+</td><td>Guild skills with contribution costs</td></tr>
+            <tr><td><code>kaibaoCard.json</code></td><td>20+ pools</td><td>Gacha/summoning chest definitions</td></tr>
+            <tr><td><code>Pet*.json</code></td><td>&mdash;</td><td>Pet system: skills, growth, triggers</td></tr>
+        </table>
+    </div>
+
+    <footer>
+        KingsCall H5 Data Suite &mdash; Built with Python, OpenCV, and MSS
+    </footer>
+</div>
+
+</body>
+</html>

@@ -3,10 +3,13 @@
 from __future__ import annotations
 
 import argparse
+import logging
 import time
 from typing import Any
 
 import cv2
+
+logger = logging.getLogger(__name__)
 
 from cardbot.agents.heuristic_agent import HeuristicAgent
 from cardbot.agents.random_agent import RandomAgent
@@ -177,7 +180,7 @@ def main() -> None:
     controller = InputController(capture_region=capture_region)
     profile_payload = load_vision_profile(args.vision_profile)
     if args.vision_profile and not profile_payload:
-        print(f"[CARD-BOT:{args.instance_id}] no vision profile at {args.vision_profile}, using auto layout")
+        logger.info("[instance:%d] no vision profile at %s, using auto layout", args.instance_id, args.vision_profile)
     apply_vision_profile(
         profile=profile_payload,
         lane_detector=lane_detector,
@@ -190,9 +193,9 @@ def main() -> None:
     window_anchor_template = profile_payload.get("window_anchor_template")
 
     if len(lane_detector.get_lane_boxes()) != args.lanes:
-        print(
-            f"[CARD-BOT:{args.instance_id}] profile lane count mismatch "
-            f"(expected={args.lanes}, got={len(lane_detector.get_lane_boxes())}), using auto layout"
+        logger.warning(
+            "[instance:%d] profile lane count mismatch (expected=%d, got=%d), using auto layout",
+            args.instance_id, args.lanes, len(lane_detector.get_lane_boxes()),
         )
         lane_detector.auto_configure(first_frame.shape)
 
@@ -207,10 +210,10 @@ def main() -> None:
                 "card_edge_ratio_threshold": card_detector.edge_ratio_threshold,
             },
         )
-        print(f"[CARD-BOT:{args.instance_id}] saved vision profile -> {saved_path}")
+        logger.info("[instance:%d] saved vision profile -> %s", args.instance_id, saved_path)
 
     agent = build_agent(args.agent)
-    logger = SessionLogger(
+    session_logger = SessionLogger(
         output_dir=args.session_dir,
         mode=args.mode,
         log_fps=args.log_fps,
@@ -244,11 +247,17 @@ def main() -> None:
     was_my_turn = False
     last_suggestion: dict | None = None
 
-    print(
-        f"[CARD-BOT:{args.instance_id}] mode={args.mode} agent={args.agent} lanes={args.lanes} "
-        f"region={capture_region if capture_region is not None else 'full-monitor'} "
-        f"profile={args.vision_profile if args.vision_profile else 'auto'} "
-        f"log={logger.file_path}"
+    logging.basicConfig(
+        level=logging.INFO,
+        format="%(asctime)s [%(name)s] %(levelname)s: %(message)s",
+        datefmt="%H:%M:%S",
+    )
+    logger.info(
+        "[instance:%d] mode=%s agent=%s lanes=%d region=%s profile=%s log=%s",
+        args.instance_id, args.mode, args.agent, args.lanes,
+        capture_region if capture_region is not None else "full-monitor",
+        args.vision_profile or "auto",
+        session_logger.file_path,
     )
 
     try:
@@ -274,7 +283,7 @@ def main() -> None:
                 ensure_minimum_hand(state, owner="player", minimum_cards=1)
                 action = agent.select_action(state, owner="player")
                 last_suggestion = dict(action) if action is not None else None
-                logger.log_turn_event(
+                session_logger.log_turn_event(
                     event="turn_start_detected",
                     action=last_suggestion,
                     executed=False,
@@ -291,26 +300,26 @@ def main() -> None:
                             _, max_val, _, _ = cv2.minMaxLoc(res)
                             if max_val < 0.90:
                                 error_msg = f"Anchor validation failed! Confidence: {max_val:.2f}"
-                                print(f"[CARD-BOT:{args.instance_id}] {error_msg}. Aborting action.")
+                                logger.warning("[instance:%d] %s. Aborting action.", args.instance_id, error_msg)
                                 can_act = False
                                 status_writer.set_error(error_msg)
                         else:
-                            print(f"[CARD-BOT:{args.instance_id}] Anchor bounds invalid. Aborting action.")
+                            logger.warning("[instance:%d] Anchor bounds invalid. Aborting action.", args.instance_id)
                             can_act = False
-                            
+
                     if can_act:
                         state.take_turn("player", action)
                         controller.execute_action(action)
-                        logger.log_turn_event(
+                        session_logger.log_turn_event(
                             event="action_executed",
                             action=last_suggestion,
                             executed=True,
                         )
                 elif args.mode == "assist":
-                    print(f"[SUGGEST] {action}")
+                    logger.info("[SUGGEST] %s", action)
             was_my_turn = my_turn
 
-            logger.log_frame(
+            session_logger.log_frame(
                 frame_index=frame_count,
                 my_turn=my_turn,
                 lane_detections=lane_detections,
@@ -351,7 +360,7 @@ def main() -> None:
         raise
     finally:
         capture.close()
-        logger.close()
+        session_logger.close()
         status_writer.close()
         if args.debug_window:
             cv2.destroyAllWindows()
