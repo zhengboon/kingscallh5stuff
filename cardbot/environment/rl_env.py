@@ -23,7 +23,7 @@ class RLEnv(gym.Env):
 
     def __init__(
         self,
-        num_lanes: int = 3,
+        num_lanes: int = 4,
         max_turns: int = 60,
         starting_hp: int = 20,
         starting_hand_size: int = 3,

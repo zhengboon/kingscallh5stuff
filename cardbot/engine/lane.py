@@ -6,7 +6,14 @@ from cardbot.engine.creature import Creature
 
 
 class Lane:
-    """Represents one battle lane with one slot per owner side."""
+    """Simplified one-slot-per-side battle lane.
+
+    The live King's Call board is 4 lanes wide with each lane spanning ~12
+    squares deep; creatures advance ~2 squares per turn and combat resolves
+    where opposing units meet. This engine compresses each lane to a single
+    occupancy slot per player so heuristic agents and tabular RL can learn
+    against a deterministic, fully-observable state.
+    """
 
     def __init__(self, index: int) -> None:
         self.index = index

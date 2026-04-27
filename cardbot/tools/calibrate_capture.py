@@ -169,7 +169,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--cols", type=int, default=2)
     parser.add_argument("--padding", type=int, default=0)
     parser.add_argument("--monitor-index", type=int, default=1)
-    parser.add_argument("--lanes", type=int, default=3)
+    parser.add_argument("--lanes", type=int, default=4)
     parser.add_argument("--out-dir", type=str, default="cardbot/data/profiles")
     return parser.parse_args()
 

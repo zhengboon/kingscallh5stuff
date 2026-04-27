@@ -17,7 +17,7 @@ def parse_args() -> argparse.Namespace:
     """Parse command-line arguments for Q-learning training."""
     parser = argparse.ArgumentParser(description="Train tabular Q-learning policy for CardBot")
     parser.add_argument("--episodes", type=int, default=4000, help="Number of training episodes")
-    parser.add_argument("--num-lanes", type=int, default=3, choices=[2, 3, 4])
+    parser.add_argument("--num-lanes", type=int, default=4, choices=[2, 3, 4])
     parser.add_argument("--max-turns", type=int, default=60)
     parser.add_argument("--alpha", type=float, default=0.10, help="Learning rate")
     parser.add_argument("--gamma", type=float, default=0.99, help="Discount factor")

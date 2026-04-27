@@ -296,8 +296,11 @@
 <div class="container">
     <header>
         <h1>KingsCall H5 Data Suite</h1>
-        <p class="subtitle">Advanced automation, real-time telemetry, and APK static analysis framework for KingsCall H5.</p>
-        <div class="version-badge">v1.1.7.0 &mdash; Cocos Creator 3.8.7</div>
+        <p class="subtitle">Automation, real-time telemetry, and APK static analysis framework for the King's Call HTML5 browser version.</p>
+        <div class="version-badge">APK Reference Build v1.1.7.0 &mdash; Cocos Creator 3.8.7</div>
+        <p style="color: var(--text-muted); font-size: 0.9rem; max-width: 700px; margin: 16px auto 0;">
+            King's Call is the current name of a long-running browser CCG previously released as <em>Kings and Legends</em> (2012&ndash;2021) and <em>Rise of Mythos</em> (2013&ndash;2019). The H5 build is operated by X Star Game Limited and runs on servers separate from Steam.
+        </p>
     </header>
 
     <!-- Stats overview -->
@@ -326,7 +329,7 @@
             </div>
             <div class="stat-card">
                 <div class="stat-number">13</div>
-                <div class="stat-label">Factions</div>
+                <div class="stat-label">Race Tags</div>
             </div>
             <div class="stat-card">
                 <div class="stat-number">215</div>
@@ -384,7 +387,7 @@
             <div>
                 <h3>Features</h3>
                 <ul>
-                    <li><strong>Game Launcher:</strong> Bootstrap 1&ndash;12 instances via IE, Edge, or Chrome.</li>
+                    <li><strong>Game Launcher:</strong> Bootstrap 1&ndash;12 instances via Microsoft Edge or Chrome. Internet Explorer was retired by Microsoft on June 15, 2022 and no longer launches modern web apps.</li>
                     <li><strong>Auto-Login:</strong> Generates ephemeral Chrome Extensions from <code>accounts.txt</code> with independent <code>--user-data-dir</code> profiles per instance.</li>
                     <li><strong>Keyboard Macro Fallback:</strong> OS-level typing for 100% login success on protected pages.</li>
                     <li><strong>Live Recorder:</strong> Background <code>mss</code> screenshots + JSONL event logs with disk space protection.</li>
@@ -405,7 +408,7 @@
                     </div>
                     <div style="color: #cbd5e1; font-size: 0.9rem; flex-grow: 1;">
                         <span style="color: #94a3b8;">Target URL:</span> https://www.xstargame.com/game/...<br><br>
-                        <span style="color: #94a3b8;">Browser:</span> Internet Explorer (Native)<br>
+                        <span style="color: #94a3b8;">Browser:</span> Microsoft Edge / Chrome<br>
                         <span style="color: #94a3b8;">Instances:</span> 4<br><br>
                         <button style="background: #3b82f6; color: white; border: none; padding: 8px 16px; border-radius: 4px; pointer-events: none;">Launch Windows</button>
                         <button style="background: #1e293b; color: #94a3b8; border: 1px solid rgba(148,163,184,0.3); padding: 8px 16px; border-radius: 4px; pointer-events: none; margin-left: 6px;">Auto-Login</button>
@@ -428,11 +431,13 @@
             </table>
             <h3>Key Mechanics</h3>
             <ul>
-                <li>6-tier card evolution with exponential fusion decay</li>
+                <li>4 lanes &times; ~12-square deep battlefield grid; creatures advance and collide</li>
+                <li>4 hero classes (Warrior, Ranger, Mage, Priest) with class-locked skill cards</li>
+                <li>6-tier card rarity (Common &rarr; Godlike) plus Awakened upgrades</li>
                 <li>33+ AOE geometry patterns</li>
                 <li>Dragon Forms: 5 wing + 5 scale variants</li>
-                <li>Race aura synergies across 13 factions</li>
-                <li>Full pet, guild, and gacha systems</li>
+                <li>Race aura synergies across 7 base factions plus Outsiders, Dragons, Angels, Demons, and Hybrid</li>
+                <li>Full pet (launched Sept 2024), guild, and gacha systems</li>
             </ul>
         </div>
 
@@ -532,6 +537,14 @@ python -m cardbot.tools.train_q --episodes 5000
             <tr><td><code>kaibaoCard.json</code></td><td>20+ pools</td><td>Gacha/summoning chest definitions</td></tr>
             <tr><td><code>Pet*.json</code></td><td>&mdash;</td><td>Pet system: skills, growth, triggers</td></tr>
         </table>
+    </div>
+
+    <!-- Engine note -->
+    <div class="glass-panel">
+        <h2>Engine Model &mdash; Simplification Note</h2>
+        <p style="color: var(--text-muted);">
+            The deterministic Python engine in <code>cardbot/engine/</code> is an intentional simplification of the live game. It models lanes as one slot per side and resolves attacks directly to hero HP rather than simulating the 12-square corridor. This is sufficient for vision-driven mirroring, heuristic decision-making, and tabular Q-learning prototypes &mdash; not for ground-truth match simulation. The default board is 4 lanes (matching the live game); 2- and 3-lane modes are kept for unit-test ergonomics.
+        </p>
     </div>
 
     <footer>

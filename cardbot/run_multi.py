@@ -21,7 +21,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--monitor-index", type=int, default=1, help="MSS monitor index")
     parser.add_argument("--mode", type=str, default="observe", choices=["observe", "assist", "autoplay"])
     parser.add_argument("--agent", type=str, default="heuristic", choices=["heuristic", "random"])
-    parser.add_argument("--lanes", type=int, default=3, choices=[2, 3, 4])
+    parser.add_argument("--lanes", type=int, default=4, choices=[2, 3, 4])
     parser.add_argument("--target-fps", type=float, default=30.0)
     parser.add_argument("--log-fps", type=float, default=5.0)
     parser.add_argument("--max-frames", type=int, default=0)

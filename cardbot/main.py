@@ -94,7 +94,13 @@ def parse_args() -> argparse.Namespace:
         default=None,
         help="Save current auto/profile-adjusted vision settings to this JSON path",
     )
-    parser.add_argument("--lanes", type=int, default=3, choices=[2, 3, 4], help="Number of board lanes")
+    parser.add_argument(
+        "--lanes",
+        type=int,
+        default=4,
+        choices=[2, 3, 4],
+        help="Number of board lanes (live King's Call uses 4; smaller values are for tests/RL)",
+    )
     parser.add_argument(
         "--mode",
         type=str,

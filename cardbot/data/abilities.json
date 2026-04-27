@@ -1,9 +1,10 @@
 {
+  "_comment": "Sample ability set themed on real King's Call mechanics (Regeneration, Armored, Rage, Inspire, Sanctuary, Cavalry Charge, Blessing, Frenzy). Engine resolves only the effect types listed in cardbot/engine/ability.py: heal_self, increase_max_hp_self, gain_damage_bonus_self, add_modifier_self, heal_lane_ally. Game abilities that don't fit (Vigilance, Flying, multi-target AOEs) are not modeled here. The full ability table (552 entries) is generated to analysis/kingscall_data_pack/raw/Skill.json by cardbot.tools.extract_kingscall_data.",
   "abilities": [
     {
       "id": "regen_2",
       "name": "Regeneration",
-      "description": "Heal 2 HP at the start of your turn.",
+      "description": "Heal 2 HP at the start of your turn (Ogre / Undead specialty).",
       "trigger": "on_turn_start",
       "effect": "heal_self",
       "value": 2,
@@ -11,8 +12,8 @@
     },
     {
       "id": "fortify_2",
-      "name": "Fortify",
-      "description": "Gain +2 max HP when summoned.",
+      "name": "Armored",
+      "description": "Gain +2 max HP when summoned; mirrors the Armored damage-reduction trait on tank creatures.",
       "trigger": "on_summon",
       "effect": "increase_max_hp_self",
       "value": 2,
@@ -22,9 +23,69 @@
     {
       "id": "rage_hit_2",
       "name": "Rage",
-      "description": "Gain +2 damage after each hit.",
+      "description": "Gain +2 damage after each hit (Ogre / Beast / Goblin specialty).",
       "trigger": "on_hit",
       "effect": "gain_damage_bonus_self",
+      "value": 2,
+      "scope": "self"
+    },
+    {
+      "id": "frenzy_3",
+      "name": "Frenzy",
+      "description": "Gain +3 damage after each hit; faster build-up than Rage.",
+      "trigger": "on_hit",
+      "effect": "gain_damage_bonus_self",
+      "value": 3,
+      "scope": "self"
+    },
+    {
+      "id": "cavalry_charge_2",
+      "name": "Cavalry Charge",
+      "description": "Gain +2 attack on summon, modeling the Human Cavalry +2 movement opening burst.",
+      "trigger": "on_summon",
+      "effect": "gain_damage_bonus_self",
+      "value": 2,
+      "scope": "self"
+    },
+    {
+      "id": "inspire_atk_1",
+      "name": "Inspire",
+      "description": "On summon, gain a persistent +1 attack modifier (Warrior aura flavor).",
+      "trigger": "on_summon",
+      "effect": "add_modifier_self",
+      "value": 0,
+      "scope": "self",
+      "params": {
+        "modifier_id": "inspire_aura",
+        "modifier_name": "Inspire Aura",
+        "atk_bonus": 1,
+        "duration_turns": null,
+        "stacks": 1
+      }
+    },
+    {
+      "id": "sanctuary_3",
+      "name": "Sanctuary",
+      "description": "On summon, gain +3 max HP for 3 turns (Priest defensive blessing).",
+      "trigger": "on_summon",
+      "effect": "add_modifier_self",
+      "value": 0,
+      "scope": "self",
+      "heal_for_delta": true,
+      "params": {
+        "modifier_id": "sanctuary_blessing",
+        "modifier_name": "Sanctuary",
+        "max_hp_bonus": 3,
+        "duration_turns": 3,
+        "stacks": 1
+      }
+    },
+    {
+      "id": "bless_lane_2",
+      "name": "Blessing",
+      "description": "Heal the ally in this lane for 2 HP at the start of your turn (Priest support).",
+      "trigger": "on_turn_start",
+      "effect": "heal_lane_ally",
       "value": 2,
       "scope": "self"
     }

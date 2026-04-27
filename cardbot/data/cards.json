@@ -1,32 +1,131 @@
 {
+  "_comment": "Sample creature cards seeded with King's Call faction flavor (Humans, Elves, Goblins, Ogres, Beasts, Undead, Halfbloods). Stats are placeholders sized for the simplified single-slot lane engine; real APK card data lives at analysis/kingscall_data_pack/raw/card.json (7,785 cards) once you run cardbot.tools.extract_kingscall_data. The optional race / damage_type / class_lock fields are ignored by the engine but aid downstream tooling.",
   "cards": [
     {
-      "id": "squire",
+      "id": "human_squire",
       "name": "Squire",
+      "race": "human",
+      "damage_type": "physical",
       "atk": 2,
       "hp": 6,
       "countdown": 1,
       "abilities": ["regen_2"]
     },
     {
-      "id": "brute",
-      "name": "Brute",
+      "id": "human_templar",
+      "name": "Templar",
+      "race": "human",
+      "damage_type": "holy",
+      "atk": 1,
+      "hp": 7,
+      "countdown": 2,
+      "abilities": ["bless_lane_2"]
+    },
+    {
+      "id": "human_cavalry_knight",
+      "name": "Cavalry Knight",
+      "race": "human",
+      "damage_type": "physical",
+      "atk": 3,
+      "hp": 6,
+      "countdown": 1,
+      "abilities": ["cavalry_charge_2"]
+    },
+    {
+      "id": "elven_archer",
+      "name": "Elven Archer",
+      "race": "elf",
+      "damage_type": "physical",
+      "atk": 3,
+      "hp": 4,
+      "countdown": 1,
+      "abilities": ["rage_hit_2"]
+    },
+    {
+      "id": "elven_wood_mage",
+      "name": "Wood Mage",
+      "race": "elf",
+      "damage_type": "arcane",
+      "atk": 2,
+      "hp": 5,
+      "countdown": 2,
+      "abilities": ["sanctuary_3"]
+    },
+    {
+      "id": "goblin_sapper",
+      "name": "Goblin Sapper",
+      "race": "goblin",
+      "damage_type": "shadow",
+      "atk": 2,
+      "hp": 4,
+      "countdown": 1,
+      "abilities": ["rage_hit_2"]
+    },
+    {
+      "id": "goblin_warlord",
+      "name": "Goblin Warlord",
+      "race": "goblin",
+      "damage_type": "physical",
+      "atk": 4,
+      "hp": 6,
+      "countdown": 2,
+      "abilities": ["inspire_atk_1"]
+    },
+    {
+      "id": "ogre_brute",
+      "name": "Ogre Brute",
+      "race": "ogre",
+      "damage_type": "physical",
       "atk": 4,
       "hp": 8,
       "countdown": 2,
       "abilities": ["fortify_2"]
     },
     {
-      "id": "berserker",
-      "name": "Berserker",
+      "id": "ogre_berserker",
+      "name": "Ogre Berserker",
+      "race": "ogre",
+      "damage_type": "physical",
       "atk": 3,
       "hp": 5,
       "countdown": 1,
-      "abilities": ["rage_hit_2"]
+      "abilities": ["rage_hit_2", "regen_2"]
     },
     {
-      "id": "guardian",
-      "name": "Guardian",
+      "id": "beast_forest_hound",
+      "name": "Forest Hound",
+      "race": "beast",
+      "damage_type": "physical",
+      "atk": 3,
+      "hp": 3,
+      "countdown": 0,
+      "abilities": ["frenzy_3"]
+    },
+    {
+      "id": "undead_necromancer",
+      "name": "Necromancer",
+      "race": "undead",
+      "damage_type": "shadow",
+      "atk": 2,
+      "hp": 6,
+      "countdown": 2,
+      "abilities": ["regen_2", "fortify_2"]
+    },
+    {
+      "id": "halfblood_centaur_lancer",
+      "name": "Centaur Lancer",
+      "race": "halfblood",
+      "damage_type": "physical",
+      "atk": 3,
+      "hp": 7,
+      "countdown": 1,
+      "abilities": ["cavalry_charge_2"]
+    },
+    {
+      "id": "human_guardian",
+      "name": "Royal Guardian",
+      "race": "human",
+      "damage_type": "physical",
       "atk": 1,
       "hp": 10,
       "countdown": 2,

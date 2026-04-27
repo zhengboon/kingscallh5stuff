@@ -23,11 +23,16 @@ GAME_EVENTS = (
 
 
 class GameState:
-    """Deterministic in-memory mirror of match state and rule resolution."""
+    """Deterministic in-memory mirror of match state and rule resolution.
+
+    The live game uses a 4-lane board, so ``num_lanes`` defaults to 4. The
+    2- and 3-lane modes are kept for unit-test ergonomics and reduced state
+    spaces during early RL training; they do not match real King's Call.
+    """
 
     def __init__(
         self,
-        num_lanes: int = 3,
+        num_lanes: int = 4,
         cards: dict[str, dict[str, Any]] | None = None,
         abilities: list[dict[str, Any]] | None = None,
         starting_hp: int = 20,
@@ -54,7 +59,7 @@ class GameState:
     @classmethod
     def from_data_files(
         cls,
-        num_lanes: int = 3,
+        num_lanes: int = 4,
         cards_path: str | Path | None = None,
         abilities_path: str | Path | None = None,
         starting_hp: int = 20,
@@ -92,8 +97,8 @@ class GameState:
         """Build a game state from a serialized snapshot payload."""
         payload = dict(snapshot or {})
         lane_payloads = payload.get("lanes", [])
-        inferred_lanes = len(lane_payloads) if isinstance(lane_payloads, list) else 3
-        lane_count = int(num_lanes if num_lanes is not None else payload.get("num_lanes", inferred_lanes or 3))
+        inferred_lanes = len(lane_payloads) if isinstance(lane_payloads, list) else 4
+        lane_count = int(num_lanes if num_lanes is not None else payload.get("num_lanes", inferred_lanes or 4))
 
         if lane_count not in (2, 3, 4):
             raise ValueError("Snapshot lane count must be 2, 3, or 4")
